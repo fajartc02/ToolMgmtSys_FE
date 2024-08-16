@@ -2,6 +2,7 @@ import { createStore } from 'vuex'
 
 import DrawingModule from './TMS/Drawing.module'
 
+
 import focusInputModule from './TMS/focusInput.module'
 import TOOL_TYPESModule from './TMS/TOOL_TYPES.module'
 import TOOLSModule from './TMS/TOOLS.module'
@@ -14,9 +15,11 @@ import GRAPHModule from './TMS/GRAPH.module'
 
 import LINESModule from './TMS/LINES.module'
 import USERSModule from './TMS/USERS.module'
+
 import HistoryToolModule from './TMS/HistoryTool.module'
 import SettingHistoryModule from './TMS/SettingHistory.module'
 import ScrabHistoryModule from './TMS/ScrabHistory.module'
+
 
 export default createStore({
   state: {
@@ -36,6 +39,7 @@ export default createStore({
   modules: {
     DrawingModule,
 
+
     focusInputModule,
     TOOL_TYPESModule,
     TOOLSModule,
@@ -45,6 +49,7 @@ export default createStore({
     GRAPHModule,
     USERSModule,
     LINESModule,
+
     MACHINESModule,
     SYSTEMModule,
     HistoryToolModule,

@@ -56,9 +56,11 @@ const actions = {
       return error
     }
   },
+
   async ACTION_EDIT_LINES({ commit }, { id, payload }) {
     try {
       const response = await axios.put(`${API_URL}/lines/edit/${id}`, payload)
+
       return response.status
     } catch (error) {
       console.error(error)

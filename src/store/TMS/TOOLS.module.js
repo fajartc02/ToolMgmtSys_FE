@@ -73,9 +73,11 @@ const actions = {
       const response = await axios.get(`${API_URL}/tools/get`, {
         params: query,
       })
+
       commit(SET_META, response.data.data.meta)
       commit(SET_TOOL, response.data.data.data)
       console.log(response.data.data.data)
+
     } catch (error) {
       console.error(error)
       return error
@@ -116,6 +118,7 @@ const actions = {
         params: query,
       })
       console.log(response.data.data.data)
+
       commit(SET_TOOL_HISTORIES, response.data.data.data)
       commit(SET_META, response.data.data.meta)
     } catch (error) {

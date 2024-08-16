@@ -290,7 +290,7 @@ export default {
     },
     editLinesTMS(lines) {
       this.editedLine = lines
-      console.log(this.editedLine)
+      console.log('id', this.editedLine)
     },
     async saveEditLines() {
       try {
@@ -319,12 +319,22 @@ export default {
     },
     showDeleteLinesTMS(lines) {
       this.deletedLine = lines
-      console.log('id', this.deletedLine)
+      // console.log('id', this.deletedLine)
     },
     resetModal() {
       this.lineName = ''
       this.lineDesc = ''
       this.createdBy = ''
+
+      this.editedLine = {
+        line_id: null,
+        line_nm: '',
+        line_desc: '',
+        created_by: '',
+      }
+      this.deletedLine = {
+        line_id: null,
+      }
     },
     async deleteLine() {
       try {
@@ -339,6 +349,22 @@ export default {
       } catch (error) {
         console.log(error)
         this.$swal('Error', 'Gagal menghapus data', 'error')
+      }
+    },
+    async saveEditLines() {
+      try {
+        let statusResponse = await this.$store.dispatch(
+          ACTION_EDIT_LINES,
+          this.editedLine,
+        )
+        if (statusResponse) {
+          await this.$store.dispatch(ACTION_GET_LINES, { meta: this.meta })
+          this.$swal('Success', 'Data has been edited', 'success')
+          this.resetModal()
+        }
+      } catch (error) {
+        console.log(error)
+        this.$swal('Error', 'Gagal mengedit data', 'error')
       }
     },
   },
