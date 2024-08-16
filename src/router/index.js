@@ -35,6 +35,23 @@ const routes = [
         name: 'ToolRegister',
         component: () => import('@/views/TMS/ToolRegister.vue'),
       },
+
+      {
+        path: '/tool/history/regrinding',
+        name: 'HistoryRegrinding',
+        component: () => import('@/views/TMS/HistoryRegrinding.vue'),
+      },
+
+      {
+        path: '/tool/history/setting',
+        name: 'HistorySetting',
+        component: () => import('@/views/TMS/HistorySetting.vue'),
+      },
+      {
+        path: '/tool/history/scrab',
+        name: 'HistoryScrab',
+        component: () => import('@/views/TMS/HistoryScrab.vue'),
+      },
       {
         path: '/tool/section',
         name: 'ToolSection',
@@ -65,6 +82,11 @@ const routes = [
         name: 'MasterSystem',
         component: () => import('@/views/TMS/MasterSystem.vue'),
       },
+      {
+        path: '/tool/users',
+        name: 'MasterUsers',
+        component: () => import('@/views/TMS/MasterUser.vue'),
+      },
 
       /*define other in here*/
     ],
@@ -82,12 +104,12 @@ const routes = [
 ]
 
 const router = createRouter({
-    history: createWebHashHistory(process.env.BASE_URL),
-    routes,
-    scrollBehavior() {
-        // always scroll to top
-        return { top: 0 }
-    },
+  history: createWebHashHistory(process.env.BASE_URL),
+  routes,
+  scrollBehavior() {
+    // always scroll to top
+    return { top: 0 }
+  },
 })
 
 export default router

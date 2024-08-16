@@ -278,7 +278,7 @@ export default {
         }
         let statusResponse = await this.$store.dispatch(ACTION_ADD_LINES, data)
 
-        if (statusResponse) {
+        if (statusResponse === 201) {
           this.$store.dispatch(ACTION_GET_LINES, { meta: this.meta })
           this.$swal('Success', 'Data has been added', 'success')
           this.resetModal()
@@ -291,6 +291,31 @@ export default {
     editLinesTMS(lines) {
       this.editedLine = lines
       console.log('id', this.editedLine)
+    },
+    async saveEditLines() {
+      try {
+        const id = this.editedLine.line_id
+        const payload = {
+          line_nm: this.editedLine.line_nm,
+          line_desc: this.editedLine.line_desc,
+          created_by: this.editedLine.created_by,
+        }
+        let statusResponse = await this.$store.dispatch(ACTION_EDIT_LINES, {
+          id,
+          payload,
+        })
+
+        if (statusResponse === 201) {
+          this.$store.dispatch(ACTION_GET_LINES, { meta: this.meta })
+          this.$swal('Success', 'Data has been updated', 'success')
+          this.resetModal()
+        } else {
+          this.$swal('Error', 'Gagal mengubah data', 'error')
+        }
+      } catch (error) {
+        console.error(error)
+        this.$swal('Error', 'Gagal mengubah data', 'error')
+      }
     },
     showDeleteLinesTMS(lines) {
       this.deletedLine = lines
@@ -316,7 +341,7 @@ export default {
         const id = this.deletedLine
         console.log('id', id)
         let statusResponse = await this.$store.dispatch(ACTION_DELETE_LINES, id)
-        if (statusResponse) {
+        if (statusResponse === 201) {
           this.$store.dispatch(ACTION_GET_LINES, { meta: this.meta })
           this.$swal('Success', 'Data has been deleted', 'success')
           this.resetModal()
