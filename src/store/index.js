@@ -1,8 +1,6 @@
 import { createStore } from 'vuex'
 
-
-import MasterDrawingModule from './TMS/MasterDrawingModule'
-
+import DrawingModule from './TMS/Drawing.module'
 
 import focusInputModule from './TMS/focusInput.module'
 import TOOL_TYPESModule from './TMS/TOOL_TYPES.module'
@@ -16,7 +14,9 @@ import GRAPHModule from './TMS/GRAPH.module'
 
 import LINESModule from './TMS/LINES.module'
 import USERSModule from './TMS/USERS.module'
-
+import HistoryToolModule from './TMS/HistoryTool.module'
+import SettingHistoryModule from './TMS/SettingHistory.module'
+import ScrabHistoryModule from './TMS/ScrabHistory.module'
 
 export default createStore({
   state: {
@@ -30,29 +30,25 @@ export default createStore({
     toggleUnfoldable(state) {
       state.sidebarUnfoldable = !state.sidebarUnfoldable
     },
+  },
 
-    actions: {},
-    modules: {
-        EmployeeModule,
-        AbsensiModule,
-        mappingModule,
-        CoolantModule,
-        PlanKurasModule,
-        DashBoardToolModule,
-        MasterDrawingModule,
-        DeliveryModule,
+  actions: {},
+  modules: {
+    DrawingModule,
 
-        focusInputModule,
-        TOOL_TYPESModule,
-        TOOLSModule,
-        METAModule,
-        TOOL_STDModule,
-        DISTRIBUTIONSModule,
-        GRAPHModule,
-        USERSModule,
-        LINESModule,
-
-        MACHINESModule,
-        SYSTEMModule,
-    },
+    focusInputModule,
+    TOOL_TYPESModule,
+    TOOLSModule,
+    METAModule,
+    TOOL_STDModule,
+    DISTRIBUTIONSModule,
+    GRAPHModule,
+    USERSModule,
+    LINESModule,
+    MACHINESModule,
+    SYSTEMModule,
+    HistoryToolModule,
+    SettingHistoryModule,
+    ScrabHistoryModule,
+  },
 })

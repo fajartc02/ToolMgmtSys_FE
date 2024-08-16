@@ -13,6 +13,19 @@
         </div>
         <div class="modal-body">
           <form>
+            <div>
+              <label for="machineName" class="form-label">Line Name</label>
+              <select v-model="selectedLine" class="form-control">
+                <option disable selected>Pilih Line</option>
+                <option
+                  v-for="line in GET_LINES"
+                  :key="line.line_id"
+                  :value="line.line_id"
+                >
+                  {{ line.line_nm }}
+                </option>
+              </select>
+            </div>
             <div class="mb-3">
               <label for="machineName" class="form-label">Machine Name</label>
               <input
@@ -40,6 +53,15 @@
                 v-model="opNo"
               />
             </div>
+            <div class="mb-3">
+              <label for="machineDescription" class="form-label">PIC</label>
+              <input
+                type="text"
+                class="form-control"
+                id="machineDescription"
+                v-model="pic"
+              />
+            </div>
           </form>
         </div>
 
@@ -54,6 +76,7 @@
           <button
             type="button"
             class="btn btn-primary"
+            data-bs-dismiss="modal"
             @click="addMachineTMS()"
           >
             Save
@@ -77,6 +100,15 @@
         <div class="modal-body">
           <form>
             <div class="mb-3">
+              <label for="registerDate" class="form-label">Register Date</label>
+              <input
+                type="date"
+                class="form-control"
+                id="registerDate"
+                v-model="editedMachine.created_dt"
+              />
+            </div>
+            <div class="mb-3">
               <label for="machineName" class="form-label">Machine Name</label>
               <input
                 type="text"
@@ -95,12 +127,21 @@
               />
             </div>
             <div class="mb-3">
-              <label for="maker" class="form-label">OP NO</label>
+              <label for="opNo" class="form-label">OP NO</label>
               <input
                 type="text"
                 class="form-control"
-                id="maker"
+                id="opNo"
                 v-model="editedMachine.op_no"
+              />
+            </div>
+            <div class="mb-3">
+              <label for="pic" class="form-label">PIC</label>
+              <input
+                type="text"
+                class="form-control"
+                id="pic"
+                v-model="editedMachine.created_by"
               />
             </div>
           </form>
@@ -188,6 +229,8 @@
               <th>Machine Name</th>
               <th>Maker</th>
               <th>OP NO</th>
+              <th>Register Date</th>
+              <th>Register By</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -201,6 +244,8 @@
               <td>{{ machines.machine_nm }}</td>
               <td>{{ machines.maker }}</td>
               <td>{{ machines.op_no }}</td>
+              <td>{{ machines.created_dt }}</td>
+              <td>{{ machines.created_by }}</td>
               <td>
                 <button
                   data-bs-toggle="modal"
@@ -214,7 +259,7 @@
                   data-bs-toggle="modal"
                   data-bs-target="#modalDeleteMachineTMS"
                   class="btn btn-danger ms-2"
-                  @click="deleteMachineTMS(machines)"
+                  @click="deleteMachineTMS(machines.machine_id)"
                 >
                   <i class="fas fa-trash"></i>
                 </button>
@@ -256,11 +301,14 @@ import {
   ACTION_ADD_MACHINES,
   ACTION_EDIT_MACHINES,
   ACTION_MACHINES,
+  ACTION_DELETE_MACHINES,
   GET_MACHINES,
 } from '@/store/TMS/MACHINES.module'
 import { GET_META } from '@/store/TMS/META.module'
 import { mapGetters } from 'vuex'
 import PaginationMaster from '@/components/TMS/Pagination/PaginationMaster.vue'
+import { ACTION_GET_LINES, GET_LINES } from '@/store/TMS/LINES.module'
+import moment from 'moment'
 export default {
   name: 'MasterMachine',
   components: {
@@ -268,17 +316,22 @@ export default {
   },
   data() {
     return {
-      currentPage: 1,
-      pageSize: 20,
+      selectedLine: '',
       machineName: '',
       maker: '',
       opNo: '',
+      pic: '',
       editedMachine: {
+        machine_id: null,
         machine_nm: '',
-        machine_maker: '',
-        machine_desc: '',
+        maker: '',
+        op_no: '',
+        created_by: '',
+        created_dt: '',
       },
-      deletedMachine: '',
+      deletedMachine: {
+        machine_id: null,
+      },
       meta: {
         totalData: 0,
         currentPage: 1,
@@ -289,9 +342,10 @@ export default {
   },
   mounted() {
     this.$store.dispatch(ACTION_MACHINES, { meta: this.meta })
+    this.$store.dispatch(ACTION_GET_LINES, { meta: this.meta })
   },
   computed: {
-    ...mapGetters([GET_MACHINES, GET_META]),
+    ...mapGetters([GET_MACHINES, GET_META, GET_LINES]),
   },
 
   watch: {
@@ -308,45 +362,98 @@ export default {
       this.meta.currentPage = page
       this.$store.dispatch(ACTION_MACHINES, { meta: this.meta })
     },
-    addMachineTMS() {
+    async addMachineTMS() {
       try {
         const payload = {
           machine_nm: this.machineName,
-          line_nm: this.cell,
-          machine_maker: this.maker,
-          machine_desc: this.machineDescription,
+          line_id: this.selectedLine,
+          maker: this.maker,
+          op_no: this.opNo,
+          created_by: this.pic,
         }
         console.log(payload)
-        this.$store.dispatch(ACTION_ADD_MACHINES, payload)
+        let response = await this.$store.dispatch(ACTION_ADD_MACHINES, payload)
+        if (response === 201) {
+          this.$store.dispatch(ACTION_MACHINES, { meta: this.meta })
+          this.$swal('Success', 'Data berhasil ditambahkan', 'success')
+          this.resetModal()
+        } else {
+          this.$swal('Error', 'Data gagal ditambahkan', 'error')
+        }
+      } catch (error) {
+        console.log(error)
+        this.$swal('Error', 'Data gagal ditambahkan', 'error')
+      }
+    },
+
+    editMachineTMS(machines) {
+      this.editedMachine = machines
+      this.editedMachine.created_dt = this.goToday()
+    },
+    goToday() {
+      return moment().format('YYYY-MM-DD')
+    },
+
+    async saveEditMachine() {
+      try {
+        const id = this.editedMachine.machine_id
+        const payload = {
+          machine_nm: this.editedMachine.machine_nm,
+          maker: this.editedMachine.maker,
+          op_no: this.editedMachine.op_no,
+          created_by: this.editedMachine.created_by,
+        }
+        let response = await this.$store.dispatch(ACTION_EDIT_MACHINES, {
+          id,
+          payload,
+        })
+        if (response === 201) {
+          this.$store.dispatch(ACTION_MACHINES, { meta: this.meta })
+          this.$swal('Success', 'Data has been updated', 'success')
+          this.resetModal()
+        }
       } catch (error) {
         console.log(error)
       }
     },
-
-    editMachineTMS(machine) {
-      this.editedMachine = machine
-      console.log(this.editedMachine)
+    deleteMachineTMS(machines) {
+      this.deletedMachine = machines
+      console.log('id', this.deletedMachine)
     },
 
-    saveEditMachine() {
+    async ActiondeleteMachineTMS() {
       try {
-        console.log(this.editedMachine)
-        this.$store.dispatch(ACTION_EDIT_MACHINES, this.editedMachine)
+        const id = this.deletedMachine
+        console.log('id', id)
+
+        let response = await this.$store.dispatch(ACTION_DELETE_MACHINES, id)
+        if (response === 201) {
+          this.$store.dispatch(ACTION_MACHINES, { meta: this.meta })
+          this.$swal('Success', 'Data has been deleted', 'success')
+          this.resetModal()
+        } else {
+          this.$swal('Error', 'Data gagal di hapus', 'error')
+        }
       } catch (error) {
         console.log(error)
+        this.$swal('Error', 'Data gagal di hapus', 'error')
       }
     },
-    deleteMachineTMS(dataMachine) {
-      this.deletedMachine = dataMachine.machine_id
-      console.log('machine_id on deleteMachineTMS', this.deletedMachine)
-    },
-
-    ActiondeleteMachineTMS() {
-      try {
-        console.log('machine_id on ActiondeleteMachineTMS', this.deletedMachine)
-        this.$store.dispatch('ActionDeleteMachineTMS', this.deletedMachine)
-      } catch (error) {
-        console.log(error)
+    resetModal() {
+      this.machineName = ''
+      this.maker = ''
+      this.machineDescription = ''
+      this.pic = ''
+      this.selectedLine = ''
+      this.editedMachine = {
+        machine_id: null,
+        machine_nm: '',
+        maker: '',
+        op_no: '',
+        created_by: '',
+      }
+      this.deletedMachine = {
+        machine_id: null,
       }
     },
   },

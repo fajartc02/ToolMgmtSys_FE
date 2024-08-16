@@ -1,73 +1,136 @@
 <template>
-  <CModal scrollable :visible="modalShow" @close="() => { $emit('modalShow', false) }">
+  <CModal
+    scrollable
+    :visible="modalShow"
+    @close="
+      () => {
+        $emit('modalShow', false)
+      }
+    "
+  >
     <CModalHeader>
       <CModalTitle>Tool Change</CModalTitle>
     </CModalHeader>
     <CModalBody>
       <div class="card p-2" style="z-index: 2">
         <CInputGroup class="mb-1">
-          <CInputGroupText style="width: 150px">
-            Machine
-          </CInputGroupText>
-          <treeselect class="form-control p-0" v-model="form.machine_id" :options="GET_MACHINES_OPTS" />
+          <CInputGroupText style="width: 150px"> Machine </CInputGroupText>
+          <treeselect
+            class="form-control p-0"
+            v-model="form.machine_id"
+            :options="GET_MACHINES_TREESELECT"
+          />
         </CInputGroup>
         <CInputGroup class="mb-1">
-          <CInputGroupText style="width: 150px">
-            PIC
-          </CInputGroupText>
-          <treeselect class="form-control p-0" v-model="form.pic_check" :options="users" />
+          <CInputGroupText style="width: 150px"> PIC </CInputGroupText>
+          <treeselect
+            class="form-control p-0"
+            v-model="form.pic_check"
+            :options="users"
+          />
         </CInputGroup>
       </div>
     </CModalBody>
     <CModalFooter>
-      <CButton color="secondary" @click="() => { $emit('modalShow', false) }">Close</CButton>
+      <CButton
+        color="secondary"
+        @click="
+          () => {
+            $emit('modalShow', false)
+          }
+        "
+        >Close</CButton
+      >
       <CButton color="primary" @click="submitCheck">Save</CButton>
     </CModalFooter>
   </CModal>
 </template>
 <script>
-import MOCK_MACHINES_TREESELECT from "@/mock/MACHINES_TREESELECT.mock";
-import MOCK_USERS_TREESELECT from "@/mock/USERS_TREESELECT.mock";
-import { ACTION_MACHINES, GET_MACHINES_OPTS } from "@/store/TMS/MACHINES.module";
-import { GET_META } from "@/store/TMS/META.module";
-import { ACTION_ADD_TOOL_HISTORY, ACTION_TOOL_DETAILS, GET_TOOL_DETAILS } from "@/store/TMS/TOOLS.module";
-import { GET_USERS_OPTS, ACTION_USERS } from "@/store/TMS/USERS.module";
+import MOCK_MACHINES_TREESELECT from '@/mock/MACHINES_TREESELECT.mock'
+import MOCK_USERS_TREESELECT from '@/mock/USERS_TREESELECT.mock'
+import {
+  ACTION_MACHINES_OPTS,
+  GET_MACHINES_TREESELECT,
+} from '@/store/TMS/MACHINES.module'
+import { GET_META } from '@/store/TMS/META.module'
+import {
+  ACTION_ADD_TOOL_HISTORY,
+  ACTION_TOOL_DETAILS,
+  GET_TOOL_DETAILS,
+} from '@/store/TMS/TOOLS.module'
+import {
+  ACTION_USERS_OPTS,
+  GET_USERS_TREESELECT,
+} from '@/store/TMS/USERS.module'
 
-import Treeselect from "@zanmato/vue3-treeselect";
-import "@zanmato/vue3-treeselect/dist/vue3-treeselect.min.css";
-import { mapGetters } from "vuex";
+import Treeselect from '@zanmato/vue3-treeselect'
+import '@zanmato/vue3-treeselect/dist/vue3-treeselect.min.css'
+import { mapGetters } from 'vuex'
 
 export default {
-  name: "ToolChangeAction",
+  name: 'ToolChangeAction',
   data() {
     return {
       form: {
         machine_id: null,
-        pic_check: null
+        pic_check: null,
       },
       qr_used_tool: null,
       qr_new_tool: null,
       machines: MOCK_MACHINES_TREESELECT,
-      users: MOCK_USERS_TREESELECT
+      users: MOCK_USERS_TREESELECT,
+      user_ln: null,
     }
   },
   watch: {
     async modalShow() {
-      await this.$store.dispatch(ACTION_MACHINES, { location: this.location, meta: this.GET_META })
+      await this.$store.dispatch(ACTION_MACHINES_OPTS, {
+        location: this.location,
+      })
+      this.updateUserLn()
     },
-    GET_USERS_OPTS: function () {
-      if (this.GET_USERS_OPTS.length > 0) {
-        this.users = this.GET_USERS_OPTS
+    location(newLocation) {
+      this.updateUserLn()
+    },
+    user_ln(newUserLn) {
+      // Fetch users options when user_ln changes
+      if (newUserLn) {
+        this.$store.dispatch(ACTION_USERS_OPTS, newUserLn)
       }
-    }
+    },
+    GET_USERS_TREESELECT(newUsers) {
+      if (newUsers.length > 0) {
+        this.users = newUsers
+      }
+    },
   },
   computed: {
-    ...mapGetters([GET_MACHINES_OPTS, GET_META, GET_TOOL_DETAILS, GET_USERS_OPTS])
+    ...mapGetters([
+      GET_META,
+      GET_TOOL_DETAILS,
+      GET_MACHINES_TREESELECT,
+      GET_USERS_TREESELECT,
+    ]),
   },
   components: {
-    Treeselect
+    Treeselect,
   },
   methods: {
+    updateUserLn() {
+      const locationMap = {
+        'Crank Shaft': 'CRS',
+        'Cam Shaft': 'CAM',
+        'Cylinder Block': 'CB',
+        'Cylinder Head': 'CH',
+      }
+      this.user_ln = locationMap[this.location] || null
+      console.log('User LN updated to:', this.user_ln)
+
+      // // Dispatch action to fetch user options
+      // if (this.user_ln) {
+      //   this.$store.dispatch(ACTION_USERS_OPTS, this.user_ln)
+      // }
+    },
     async submitCheck() {
       try {
         this.$swal.showLoading()
@@ -90,35 +153,40 @@ export default {
             distribution_id,
             system_activity: 'IN USED',
             act_counter: `${this.GET_TOOL_DETAILS.act_counter}`,
-            regrinding_count: this.GET_TOOL_DETAILS.regrinding_count
+            regrinding_count: this.GET_TOOL_DETAILS.regrinding_count,
           },
         }
 
         await this.$store.dispatch(ACTION_ADD_TOOL_HISTORY, payloadData)
-        await this.$store.dispatch(ACTION_TOOL_DETAILS, { tool_qr: this.GET_TOOL_DETAILS.tool_qr })
+        await this.$store.dispatch(ACTION_TOOL_DETAILS, {
+          tool_qr: this.GET_TOOL_DETAILS.tool_qr,
+        })
 
         this.$emit('modal-show', false)
         this.$swal.hideLoading()
 
         // this.clearForm()
       } catch (error) {
-        console.log(error);
+        console.log(error)
       }
-    }
+    },
   },
   props: {
     modalShow: {
       type: Boolean,
-      default: false
+      default: false,
     },
     location: {
       type: String,
-      default: 'Cam Shaft'
-    }
+      default: 'Cam Shaft',
+    },
   },
   mounted() {
-    this.$store.dispatch(ACTION_USERS, { meta: this.GET_META })
-  }
+    // // Fetch users options when component is mounted if user_ln is available
+    // if (this.user_ln) {
+    //   this.$store.dispatch(ACTION_USERS_OPTS, this.user_ln)
+    // }
+  },
 }
 </script>
 <style></style>

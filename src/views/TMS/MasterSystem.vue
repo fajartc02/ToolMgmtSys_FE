@@ -212,6 +212,7 @@
               <th>Value</th>
               <th>Description</th>
               <th>Created By</th>
+              <th>Register Date</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -225,7 +226,7 @@
               <td>{{ SYSTEM_DATA.system_value }}</td>
               <td>{{ SYSTEM_DATA.system_desc }}</td>
               <td>{{ SYSTEM_DATA.created_by }}</td>
-
+              <td>{{ SYSTEM_DATA.created_dt }}</td>
               <td>
                 <button
                   class="btn btn-primary"
@@ -253,7 +254,15 @@
 </template>
 
 <script>
+import {
+  GET_SYSTEM,
+  ACTION_SYSTEM,
+  ACTION_ADD_SYSTEM,
+  ACTION_EDIT_SYSTEM,
+  ACTION_DELETE_SYSTEM,
+} from '@/store/TMS/SYSTEM.module'
 import { mapGetters } from 'vuex'
+import moment from 'moment'
 
 export default {
   name: 'MasterSystem',
@@ -269,6 +278,7 @@ export default {
         system_value: '',
         system_desc: '',
         created_by: '',
+        created_dt: '',
       },
       deletedSystem: {
         id: null,
@@ -276,44 +286,106 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['GET_SYSTEM']),
+    ...mapGetters([GET_SYSTEM]),
   },
   mounted() {
-    this.$store.dispatch('ACTION_SYSTEM')
+    this.$store.dispatch(ACTION_SYSTEM)
   },
   methods: {
-    saveSystem() {
-      const payload = {
-        id: this.getDataSystem.length + 1,
-        system_type: this.system_type,
-        system_value: this.system_value,
-        system_desc: this.system_desc,
-        created_by: this.created_by,
+    async saveSystem() {
+      try {
+        const payload = {
+          system_type: this.system_type,
+          system_value: this.system_value,
+          system_desc: this.system_desc,
+          created_by: this.created_by,
+        }
+        let response = await this.$store.dispatch(ACTION_ADD_SYSTEM, payload)
+        console.log('Response', response)
+
+        if (response === 201) {
+          this.$store.dispatch(ACTION_SYSTEM)
+          this.$swal('Success', 'Data has been saved', 'success')
+          this.resetForm()
+        } else {
+          this.$swal('Error', 'Gagal menyimpan data', 'error')
+        }
+      } catch (error) {
+        console.log(error)
+        this.$swal('Error', 'Gagal menyimpan data', 'error')
       }
-      this.$store.dispatch('ActionSaveSystem', payload)
-      this.resetForm()
     },
     prepareEditSystem(system) {
-      this.editedSystem = { ...system }
+      this.editedSystem = system
+      console.log('system', this.editedSystem)
+      this.editedSystem.created_dt = this.goToday()
     },
-    saveEditSystem() {
-      const payload = { ...this.editedSystem }
-      this.$store.dispatch('ActionEditSystem', payload)
+    goToday() {
+      return moment().format('YYYY-MM-DD')
+    },
+    async saveEditSystem() {
+      try {
+        const id = this.editedSystem.system_id
+        const payload = {
+          system_type: this.editedSystem.system_type,
+          system_value: this.editedSystem.system_value,
+          system_desc: this.editedSystem.system_desc,
+          created_by: this.editedSystem.created_by,
+          created_dt: this.editedSystem.created_dt,
+        }
+        console.log('payload', payload)
+        console.log('id', id)
+        let response = await this.$store.dispatch(ACTION_EDIT_SYSTEM, {
+          id,
+          payload,
+        })
+        if (response === 201) {
+          this.$store.dispatch(ACTION_SYSTEM)
+          this.$swal('Success', 'Data has been edited', 'success')
+          this.resetForm()
+        } else {
+          this.$swal('Error', 'Gagal menyimpan data', 'error')
+        }
+      } catch (error) {
+        console.log(error)
+        this.$swal('Error', 'Gagal menyimpan data', 'error')
+      }
     },
     showDeleteConfirmationSystem(id) {
       this.deletedSystem = id
       console.log('id', this.deletedSystem)
     },
-    deleteSystem() {
-      const id = this.deletedSystem
-      console.log('id', id)
-      this.$store.dispatch('ActionDeleteSystem', id)
+    async deleteSystem() {
+      try {
+        const id = this.deletedSystem
+        let response = await this.$store.dispatch(ACTION_DELETE_SYSTEM, id)
+        if (response === 201) {
+          this.$store.dispatch(ACTION_SYSTEM)
+          this.$swal('Success', 'Data has been deleted', 'success')
+          this.resetForm()
+        } else {
+          this.$swal('Error', 'Data gagal di hapus', 'error')
+        }
+      } catch (error) {
+        console.log(error)
+        this.$swal('Error', 'Data gagal di hapus', 'error')
+      }
     },
     resetForm() {
       this.system_type = ''
       this.system_value = ''
       this.system_desc = ''
       this.created_by = ''
+      this.editedSystem = {
+        id: null,
+        system_type: '',
+        system_value: '',
+        system_desc: '',
+        created_by: '',
+      }
+      this.deletedSystem = {
+        id: null,
+      }
     },
   },
 }

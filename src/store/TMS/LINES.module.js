@@ -6,6 +6,7 @@ export const ACTION_GET_LINES = 'ACTION_GET_LINES'
 export const SET_LINES = 'SET_LINES'
 export const ACTION_ADD_LINES = 'ACTION_ADD_LINES'
 export const ACTION_DELETE_LINES = 'ACTION_DELETE_LINES'
+export const ACTION_EDIT_LINES = 'ACTION_EDIT_LINES'
 
 const state = {
   LINE_DATAS: [],
@@ -49,6 +50,15 @@ const actions = {
   async ACTION_DELETE_LINES({ commit }, payload) {
     try {
       const response = await axios.put(`${API_URL}/lines/delete/${payload}`)
+      return response.status
+    } catch (error) {
+      console.error(error)
+      return error
+    }
+  },
+  async ACTION_EDIT_LINES({ commit }, { id, payload }) {
+    try {
+      const response = await axios.put(`${API_URL}/lines/edit/${id}`, payload)
       return response.status
     } catch (error) {
       console.error(error)

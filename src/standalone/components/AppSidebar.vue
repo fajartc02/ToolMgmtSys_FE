@@ -1,4 +1,5 @@
 <template>
+  updateSidebarVisible
   <CSidebar
     class="bg-white"
     position="fixed"
@@ -132,39 +133,81 @@ export default {
               parentId: 'ROOT',
             },
             {
-              component: 'CNavItem',
-              name: 'Master Drawing',
-              to: '/tool/drawing',
-              // icon: 'cilMap',
-              parentId: 'ROOT',
+              componet: 'CNavGroup',
+              name: 'Tool History', // Nama menu untuk EAssesment
+              icon: 'cilHistory', // Ikonya bisa disesuaikan
+              items: [
+                {
+                  component: 'CNavItem',
+                  name: 'History Regrinding',
+                  to: '/tool/history/regrinding',
+                  // icon: 'cilMap',
+                  parentId: 'ROOT',
+                },
+                {
+                  component: 'CNavItem',
+                  name: 'History Setting',
+                  to: '/tool/history/setting',
+                  // icon: 'cilMap',
+                  parentId: 'ROOT',
+                },
+                {
+                  component: 'CNavItem',
+                  name: 'History Tool Scrab',
+                  to: '/tool/history/scrab',
+                  // icon: 'cilMap',
+                  parentId: 'ROOT',
+                },
+              ],
             },
             {
-              component: 'CNavItem',
-              name: 'Master Line',
-              to: '/tool/line',
-              // icon: 'cilMap',
-              parentId: 'ROOT',
-            },
-            {
-              component: 'CNavItem',
-              name: 'Master Machine',
-              to: '/tool/machine',
-              // icon: 'cilMap',
-              parentId: 'ROOT',
-            },
-            {
-              component: 'CNavItem',
-              name: 'Master Distribution',
-              to: '/tool/distribution',
-              // icon: 'cilMap',
-              parentId: 'ROOT',
-            },
-            {
-              component: 'CNavItem',
-              name: 'Master System',
-              to: '/tool/system',
-              // icon: 'cilMap',
-              parentId: 'ROOT',
+              componet: 'CNavGroup',
+              name: 'Master Data', // Nama menu untuk EAssesment
+              icon: 'cilSpreadsheet',
+              items: [
+                {
+                  component: 'CNavItem',
+                  name: 'Master Drawing',
+                  to: '/tool/drawing',
+                  // icon: 'cilMap',
+                  parentId: 'ROOT',
+                },
+                {
+                  component: 'CNavItem',
+                  name: 'Master Line',
+                  to: '/tool/line',
+                  // icon: 'cilMap',
+                  parentId: 'ROOT',
+                },
+                {
+                  component: 'CNavItem',
+                  name: 'Master Machine',
+                  to: '/tool/machine',
+                  // icon: 'cilMap',
+                  parentId: 'ROOT',
+                },
+                {
+                  component: 'CNavItem',
+                  name: 'Master Distribution',
+                  to: '/tool/distribution',
+                  // icon: 'cilMap',
+                  parentId: 'ROOT',
+                },
+                {
+                  component: 'CNavItem',
+                  name: 'Master System',
+                  to: '/tool/system',
+                  // icon: 'cilMap',
+                  parentId: 'ROOT',
+                },
+                {
+                  component: 'CNavItem',
+                  name: 'Master Users',
+                  to: '/tool/users',
+                  // icon: 'cilMap',
+                  parentId: 'ROOT',
+                },
+              ],
             },
           ],
         },
