@@ -153,6 +153,13 @@ export default {
                 },
                 {
                   component: 'CNavItem',
+                  name: 'History First Check',
+                  to: '/tool/history/firstcheck',
+                  // icon: 'cilMap',
+                  parentId: 'ROOT',
+                },
+                {
+                  component: 'CNavItem',
                   name: 'History Tool Scrab',
                   to: '/tool/history/scrab',
                   // icon: 'cilMap',
@@ -183,6 +190,13 @@ export default {
                   component: 'CNavItem',
                   name: 'Master Machine',
                   to: '/tool/machine',
+                  // icon: 'cilMap',
+                  parentId: 'ROOT',
+                },
+                {
+                  component: 'CNavItem',
+                  name: 'Master Tool No QR Code',
+                  to: '/tool/master/first-check',
                   // icon: 'cilMap',
                   parentId: 'ROOT',
                 },

@@ -257,35 +257,56 @@ export default {
 
     prepareChartData(data) {
       this.chartDataList = Object.keys(data).map((measuringPortion) => {
-        const values = data[measuringPortion].values
-        const upperLimit = parseFloat(data[measuringPortion].upper_limit) || 0
-        const lowerLimit = parseFloat(data[measuringPortion].lower_limit) || 0
+        const values = data[measuringPortion].values || []
+        const upperLimit =
+          data[measuringPortion].upper_limit !== null
+            ? parseFloat(data[measuringPortion].upper_limit)
+            : null
+        const lowerLimit =
+          data[measuringPortion].lower_limit !== null
+            ? parseFloat(data[measuringPortion].lower_limit)
+            : null
 
-        let status = ''
         let categories = []
         let series = []
 
         if (measuringPortion === 'Internal Coolant') {
-          // Determine status based on values
-          status = values.every((value) => value === 'OK') ? 'OK' : 'NG'
-
-          // Create categories with status
-          categories = values.map(
-            (value, index) => `Setting ${index + 1} (${value})`,
+          // Untuk "Internal Coolant", gunakan status OK/NG
+          const statuses = values.map((value) => value.value) // Ambil status OK/NG
+          categories = values.map((value) => value.date) // Gunakan date sebagai sumbu X
+          const numericData = statuses.map((status) =>
+            status === 'OK' ? 1 : 0,
           )
 
-          // Series data for Internal Coolant
           series = [
             {
               name: measuringPortion,
-              data: values.map((value) => (value === 'OK' ? 1 : 0)), // Transform OK/NG to numeric if needed
+              data: numericData,
             },
           ]
-        } else {
-          // For other measuring portions
-          const numericValues = values.map((value) => parseFloat(value))
 
-          // Define chart series
+          return {
+            measuring_portion: measuringPortion,
+            chartOptions: {
+              chart: {
+                id: `chart-${measuringPortion}`,
+              },
+              xaxis: {
+                categories, // Gunakan date sebagai kategori
+              },
+              yaxis: {
+                min: 0,
+                max: 1, // Karena hanya 0 (NG) atau 1 (OK)
+              },
+            },
+            series,
+            status: statuses.includes('NG') ? 'NG' : 'OK', // Tentukan status keseluruhan
+          }
+        } else {
+          // Untuk jenis pengukuran lain
+          const numericValues = values.map((value) => parseFloat(value.value))
+          categories = values.map((value) => value.date) // Gunakan date sebagai kategori
+
           series = [
             {
               name: measuringPortion,
@@ -293,25 +314,37 @@ export default {
             },
           ]
 
-          categories = numericValues.map((_, index) => `Setting ${index + 1}`)
-
-          // Calculate min and max values for y-axis
           const minValue = Math.min(
             ...numericValues.filter((value) => !isNaN(value)),
-            lowerLimit,
+            lowerLimit || 0,
           )
           const maxValue = Math.max(
             ...numericValues.filter((value) => !isNaN(value)),
-            upperLimit,
+            upperLimit || 0,
           )
-          const buffer = (maxValue - minValue) * 0.1 // 10% buffer
+          const buffer = (maxValue - minValue) * 0.1 // Buffer 10%
 
           const chartOptions = {
             chart: {
               id: `chart-${measuringPortion}`,
             },
             xaxis: {
-              categories,
+              categories, // Gunakan date sebagai kategori
+            },
+            dataLabels: {
+              enabled: true,
+            },
+            grid: {
+              xaxis: {
+                lines: {
+                  show: true, // Menampilkan garis pada sumbu x
+                },
+              },
+              yaxis: {
+                lines: {
+                  show: true, // Menampilkan garis pada sumbu y
+                },
+              },
             },
             yaxis: {
               min: minValue - buffer,
@@ -351,25 +384,11 @@ export default {
             measuring_portion: measuringPortion,
             chartOptions,
             series,
-            status: '', // No status for non-Internal Coolant
           }
         }
-
-        // Return data for Internal Coolant with chart options
-        return {
-          measuring_portion: measuringPortion,
-          chartOptions: {
-            chart: {
-              id: `chart-${measuringPortion}`,
-            },
-            xaxis: {
-              categories,
-            },
-          },
-          series,
-          status,
-        }
       })
+
+      console.log('chartDataList', this.chartDataList)
     },
     async handlePeriodChange() {
       try {
@@ -482,5 +501,13 @@ export default {
   width: auto;
   min-width: 100px; /* Atur sesuai kebutuhan */
   margin-left: auto; /* Dorong elemen ke kanan */
+}
+.table-bordered th,
+.table-bordered td {
+  border: 1px solid #000 !important;
+}
+.table-bordered th {
+  background-color: rgb(198, 240, 240);
+  height: 50px;
 }
 </style>

@@ -87,7 +87,7 @@
         </div>
         <div class="modal-body">
           <!-- Tabel 1 -->
-          <table class="table table-bordered table-striped">
+          <table class="table table-bordered table-striped text-center">
             <tr>
               <th>Tool Drawing Name</th>
               <th>Maker</th>
@@ -103,10 +103,10 @@
           </table>
           <!-- Tabel 2 -->
           <div class="table-responsive">
-            <table class="table table-bordered table-striped">
+            <table class="table table-bordered table-striped text-center">
               <thead>
                 <tr>
-                  <th style="width: 30%">Measure Name</th>
+                  <th style="width: 30%">Parameter Name</th>
                   <th style="width: 14%">Value</th>
                   <th style="width: 14%">Upper Limit</th>
                   <th style="width: 14%">Lower Limit</th>

@@ -48,6 +48,7 @@
 <script>
 import MOCK_MACHINES_TREESELECT from '@/mock/MACHINES_TREESELECT.mock'
 import MOCK_USERS_TREESELECT from '@/mock/USERS_TREESELECT.mock'
+import { ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK } from '@/store/TMS/FirstCheck.module'
 import {
   ACTION_MACHINES_OPTS,
   GET_MACHINES_TREESELECT,
@@ -161,7 +162,10 @@ export default {
         await this.$store.dispatch(ACTION_TOOL_DETAILS, {
           tool_qr: this.GET_TOOL_DETAILS.tool_qr,
         })
-
+        this.$store.dispatch(ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK, {
+          meta: this.meta,
+          location: this.location,
+        })
         this.$emit('modal-show', false)
         this.$swal.hideLoading()
 
@@ -180,12 +184,26 @@ export default {
       type: String,
       default: 'Cam Shaft',
     },
+    tool_type_id: {
+      type: Number,
+      default: null,
+    },
+    meta: {
+      type: Object,
+      default: {
+        totalData: 0,
+        currentPage: 1,
+        itemsPerPage: 25,
+        totalPages: 1,
+      },
+    },
   },
   mounted() {
     // // Fetch users options when component is mounted if user_ln is available
     // if (this.user_ln) {
     //   this.$store.dispatch(ACTION_USERS_OPTS, this.user_ln)
     // }
+    console.log('Tool Type ID:', this.tool_type_id)
   },
 }
 </script>

@@ -17,11 +17,14 @@ export default {
       series: [
         {
           name: 'Actual',
-          data: [10000, 10000, 10000, 10000, 9100, 9100, 9100, 9100],
+          data: [10000, 10000, 9985, 9853, 9400, 9300, 9210, 9000],
         },
         {
           name: 'Standard',
           data: [10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000],
+          dataLabels: {
+            enabled: false,
+          },
         },
       ],
       chartOptions: {
@@ -36,7 +39,7 @@ export default {
           count: 4,
         },
         dataLabels: {
-          enabled: false,
+          enabled: true,
         },
         stroke: {
           curve: 'straight',
@@ -53,14 +56,14 @@ export default {
         },
         xaxis: {
           categories: [
-            'REGR#1',
-            'REGR#2',
-            'REGR#3',
-            'REGR#4',
-            'REGR#5',
-            'REGR#6',
-            'REGR#7',
-            'REGR#8',
+            ' 03-08-2023',
+            ' 15-10-2023',
+            ' 05-12-2023',
+            ' 03-02-2024',
+            ' 01-04-2024',
+            ' 20-06-2024',
+            ' 07-08-2024',
+            ' 25-09-2024',
           ],
         },
       },
