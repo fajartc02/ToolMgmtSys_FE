@@ -185,8 +185,10 @@
     <!-- PROD SCOPE -->
     <ToolChangeAction
       :modalShow="toolChangeModal"
+      :tool_type_id="GET_TOOL_DETAILS.tool_type_id"
       @modal-show="(state) => dismissModal('toolChangeModal')"
       :location="location"
+      :meta="meta"
     />
     <ToolUsedAction
       :modalShow="toolUsedModal"
@@ -295,6 +297,7 @@ export default {
       type: String,
       default: 'Tool Regrinding',
     },
+    meta: Object,
   },
 }
 </script>

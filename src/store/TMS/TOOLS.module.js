@@ -22,11 +22,16 @@ export const ACTION_TOOL_ADD = 'ACTION_TOOL_ADD'
 export const ACTION_GENERATE_TOOL = 'ACTION_GENERATE_TOOL'
 export const ACTION_EMPTY_QR_TOOL = 'ACTION_EMPTY_QR_TOOL'
 
+export const SET_HISTORY_QUALITY = 'SET_HISTORY_QUALITY'
+export const GET_HISTORY_QUALITY = 'GET_HISTORY_QUALITY'
+export const ACTION_GET_GRAFIK_QUALITY = 'ACTION_GET_GRAFIK_QUALITY'
+
 const state = {
   TOOL_DATA: true,
   TOOL_DETAILS: null,
   TOOL_QR: null,
   TOOL_HISTORIES: [],
+  HISTORY_QUALITY: [],
 }
 
 const getters = {
@@ -50,6 +55,9 @@ const getters = {
   GET_TOOL_HISTORIES(state) {
     return state.TOOL_HISTORIES
   },
+  GET_HISTORY_QUALITY(state) {
+    return state.HISTORY_QUALITY
+  },
 }
 
 const mutations = {
@@ -65,6 +73,9 @@ const mutations = {
   SET_TOOL_HISTORIES(state, payload) {
     state.TOOL_HISTORIES = payload
   },
+  SET_HISTORY_QUALITY(state, payload) {
+    state.HISTORY_QUALITY = payload
+  },
 }
 
 const actions = {
@@ -77,7 +88,6 @@ const actions = {
       commit(SET_META, response.data.data.meta)
       commit(SET_TOOL, response.data.data.data)
       console.log(response.data.data.data)
-
     } catch (error) {
       console.error(error)
       return error
@@ -117,10 +127,24 @@ const actions = {
       const response = await axios.get(`${API_URL}/tools/history`, {
         params: query,
       })
-      console.log(response.data.data.data)
+      // console.log(response.data.data.data)
 
       commit(SET_TOOL_HISTORIES, response.data.data.data)
       commit(SET_META, response.data.data.meta)
+    } catch (error) {
+      console.error(error)
+      return error
+    }
+  },
+  async ACTION_GET_GRAFIK_QUALITY({ commit }, query) {
+    try {
+      const response = await axios.get(`${API_URL}/grafik/get`, {
+        params: query,
+      })
+      // console.log(response.data.data)
+
+      commit(SET_HISTORY_QUALITY, response.data.data)
+      return response
     } catch (error) {
       console.error(error)
       return error

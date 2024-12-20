@@ -161,4 +161,12 @@ export default {
   min-width: 100px; /* Atur sesuai kebutuhan */
   margin-left: auto; /* Dorong elemen ke kanan */
 }
+.table-bordered th,
+.table-bordered td {
+  border: 1px solid #000 !important;
+}
+.table-bordered th {
+  background-color: rgb(198, 240, 240);
+  height: 50px;
+}
 </style>

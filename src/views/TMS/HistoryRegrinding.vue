@@ -24,9 +24,6 @@
             :chartData="chartRegList"
             :selectedPeriod="selectedPeriod"
           />
-          <div v-else class="text-center">
-            <h3>Belum Ada Input Regrinding</h3>
-          </div>
         </div>
 
         <div v-if="showChart" id="chart">
@@ -68,7 +65,7 @@
           </thead>
           <tbody>
             <tr
-              v-for="Histories in GET_HISTORIES_TOOL"
+              v-for="Histories in sortedHistories"
               :key="Histories.tool_history_id"
             >
               <td>{{ Histories.no }}</td>
@@ -164,6 +161,13 @@ export default {
       GET_MEASUREMENT_GRAPH,
       GET_REGRINDING_GRAPH,
     ]),
+    sortedHistories() {
+      // Mengurutkan berdasarkan date_check dalam urutan naik
+      return this.GET_HISTORIES_TOOL.slice().sort((a, b) => {
+        // Asumsikan date_check dalam format yang dapat di-parse oleh Date
+        return new Date(b.date_check) - new Date(a.date_check)
+      })
+    },
   },
   watch: {
     GET_META: function () {
@@ -215,15 +219,12 @@ export default {
 
         if (response.status === 200 && response.data) {
           const measurementData = response.data
+          console.log('measurementData', measurementData)
+
           if (measurementData && Object.keys(measurementData).length > 0) {
             this.prepareChartData(measurementData)
             this.showChart = true
             this.showRegrindingChart = false
-            this.$swal(
-              'Success',
-              'Data has been loaded successfully',
-              'success',
-            )
           } else {
             this.chartDataList = []
             this.showChart = false
@@ -246,25 +247,40 @@ export default {
     },
 
     prepareChartData(data) {
+      console.log('prepareChartData', data)
+
       this.chartDataList = Object.keys(data).map((measuringPortion) => {
-        const values = data[measuringPortion].values.map((value) =>
-          parseFloat(value),
-        )
+        // Mendapatkan dan membalikkan urutan values
+        const values = data[measuringPortion].values
+          .map((entry) => ({
+            value: parseFloat(entry.value),
+            date: entry.date,
+          }))
+          .reverse() // Membalik urutan values dari yang terakhir ke yang pertama
+
         const upperLimit = parseFloat(data[measuringPortion].upper_limit)
         const lowerLimit = parseFloat(data[measuringPortion].lower_limit)
 
+        // Membuat data series untuk chart
         const series = [
           {
             name: measuringPortion,
-            data: values,
+            data: values.map((entry) => entry.value), // Gunakan nilai dari setiap entry
           },
         ]
 
-        const categories = values.map((_, index) => `REG ${index + 1}`)
+        // Membuat categories dari tanggal
+        const categories = values.map((entry) => entry.date) // Gunakan tanggal dari setiap entry
 
         // Menghitung nilai minimum dan maksimum untuk menambahkan buffer
-        const minValue = Math.min(...values, lowerLimit)
-        const maxValue = Math.max(...values, upperLimit)
+        const minValue = Math.min(
+          ...values.map((entry) => entry.value),
+          lowerLimit,
+        )
+        const maxValue = Math.max(
+          ...values.map((entry) => entry.value),
+          upperLimit,
+        )
         const buffer = (maxValue - minValue) * 0.1 // 10% buffer
 
         const chartOptions = {
@@ -272,11 +288,18 @@ export default {
             id: `chart-${measuringPortion}`,
           },
           xaxis: {
-            categories,
+            categories, // Gunakan tanggal sebagai kategori
+            labels: {
+              rotate: -45, // Putar label agar lebih mudah dibaca
+              formatter: (value) => value, // Pastikan labelnya tetap berupa tanggal
+            },
           },
           yaxis: {
             min: minValue - buffer,
             max: maxValue + buffer,
+          },
+          dataLabels: {
+            enabled: true,
           },
           grid: {
             xaxis: {
@@ -326,7 +349,9 @@ export default {
           series,
         }
       })
+      console.log('chartDataList', this.chartDataList)
     },
+
     async handlePeriodChange() {
       try {
         const period = this.selectedPeriod
@@ -463,5 +488,13 @@ export default {
   width: auto;
   min-width: 100px; /* Atur sesuai kebutuhan */
   margin-left: auto; /* Dorong elemen ke kanan */
+}
+.table-bordered th,
+.table-bordered td {
+  border: 1px solid #000 !important;
+}
+.table-bordered th {
+  background-color: rgb(198, 240, 240);
+  height: 50px;
 }
 </style>

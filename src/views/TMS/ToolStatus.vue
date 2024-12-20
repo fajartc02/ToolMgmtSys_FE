@@ -15,16 +15,52 @@
       </div>
     </div>
     <CardToolStatus v-if="search.tool_qr != ''" :is_footer="false" />
-    <div v-if="search.tool_qr != ''" class="card mt-1">
-      <HistoricalGraphVue :tool_qr="search.tool_qr" :system_activity="'USED'" />
+    <div class="row">
+      <div v-if="search.tool_qr != ''" class="col mt-1">
+        <div
+          v-for="(chartData, index) in chartDataList"
+          :key="index"
+          class="mb-1"
+          ref="chartCard"
+        >
+          <div class="card">
+            <div class="card-body">
+              <h5>{{ chartData.measuring_portion }}</h5>
+              <apexchart
+                type="line"
+                height="300"
+                :options="chartData.chartOptions"
+                :series="chartData.series"
+              ></apexchart>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div v-if="search.tool_qr != ''" class="card mt-1">
+          <HistoricalGraphVue
+            :tool_qr="search.tool_qr"
+            :system_activity="'USED'"
+          />
+        </div>
+        <!-- <div v-if="search.tool_qr == 'A0167'" class="card mt-1">
+          <HistoricalGraph167 v-if="search.tool_qr != ''" />
+        </div>
+        <div v-if="search.tool_qr == 'A0256'" class="card mt-1">
+          <HistoricalGraphVue2 v-if="search.tool_qr != ''" />
+        </div> -->
+        <!-- v-if="search.tool_qr == 'A0167' || search.tool_qr == 'A0256'" -->
+        <!-- <div v-if="search.tool_qr != ''" class="card mt-1">
+          <HistoricalGraphVue
+            v-if="search.tool_qr !== 'A0167' && search.tool_qr !== 'A0256'"
+            :tool_qr="search.tool_qr"
+            :system_activity="'USED'"
+          />
+          <HistoricalGraph167 v-else-if="search.tool_qr === 'A0167'" />
+          <HistoricalGraphVue2 v-else-if="search.tool_qr === 'A0256'" />
+        </div> -->
+      </div>
     </div>
-    <!-- <div v-if="search.tool_qr == 'A0167'" class="card mt-1">
-      <HistoricalGraph167 v-if="search.tool_qr != ''" />
-    </div>
-    <div v-if="search.tool_qr == 'A0256'" class="card mt-1">
-      <HistoricalGraphVue2 v-if="search.tool_qr != ''" />
-    </div> -->
-    <!-- v-if="search.tool_qr == 'A0167' || search.tool_qr == 'A0256'" -->
     <div
       v-if="search.tool_qr != ''"
       class="d-flex justify-content-center align-items-start mt-2"
@@ -78,6 +114,33 @@
             </tbody>
           </table>
         </div>
+        <div class="card-footer">
+          <div class="d-flex justify-content-between">
+            <!-- Show per page selector -->
+            <div>
+              <label class="m-0">Show</label>
+              <select class="form-select" v-model="meta.itemsPerPage">
+                <option
+                  v-for="itemsPerPage in [25, 50, 100]"
+                  :key="itemsPerPage"
+                  :value="itemsPerPage"
+                >
+                  {{ itemsPerPage }}
+                </option>
+              </select>
+            </div>
+            <!-- Pagination component -->
+            <div>
+              <label class="m-0">Page</label>
+              <PaginationMaster
+                :currentPage="meta.currentPage"
+                :totalData="meta.totalData"
+                :itemsPerPage="meta.itemsPerPage"
+                @page-changed="handlePageChange"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <PleaseScanQRTools v-if="search.tool_qr == ''" />
@@ -88,8 +151,10 @@ import CardToolStatus from '@/components/TMS/Cards/CardToolStatus.vue'
 import PleaseScanQRTools from '@/components/TMS/PleaseScanQRTools.vue'
 
 import {
+  ACTION_GET_GRAFIK_QUALITY,
   ACTION_GET_TOOL_HISTORY,
   ACTION_TOOL_DETAILS,
+  GET_HISTORY_QUALITY,
   GET_TOOL_DETAILS,
   GET_TOOL_HISTORIES,
 } from '@/store/TMS/TOOLS.module'
@@ -99,11 +164,21 @@ import HistoricalGraphVue from '@/components/TMS/Graphs/HistoricalGraph.vue'
 import HistoricalGraphVue2 from '@/components/TMS/Graphs/HistoricalGraph2.vue'
 import { mapGetters } from 'vuex'
 import { GET_META } from '@/store/TMS/META.module'
+import VueApexCharts from 'vue3-apexcharts'
+import moment from 'moment-timezone'
+import PaginationMaster from '@/components/TMS/Pagination/PaginationMaster.vue'
 
 export default {
   name: 'ToolStatus',
+
   data() {
     return {
+      meta: {
+        totalData: 0,
+        currentPage: 1,
+        itemsPerPage: 25,
+        totalPages: 1,
+      },
       search: {
         tool_qr: '',
       },
@@ -176,17 +251,33 @@ export default {
         //   notes: "",
         // },
       ],
+      chartDataList: [],
     }
   },
   computed: {
-    ...mapGetters([GET_TOOL_DETAILS, GET_META, GET_TOOL_HISTORIES]),
+    ...mapGetters([
+      GET_TOOL_DETAILS,
+      GET_META,
+      GET_TOOL_HISTORIES,
+      GET_HISTORY_QUALITY,
+    ]),
   },
   watch: {
+    GET_META: function () {
+      this.meta = this.GET_META
+    },
+    'meta.itemsPerPage': function () {
+      this.$store.dispatch(ACTION_GET_TOOL_HISTORY, {
+        meta: this.meta,
+        tool_qr: this.search.tool_qr,
+      })
+    },
     search: {
       async handler() {
         if (this.search.tool_qr.length === 5) {
           await this.$store.dispatch(ACTION_TOOL_DETAILS, this.search)
           await this.getToolsHistory()
+          await this.getGrafikQuality()
         }
         if (this.search.tool_qr.length >= 10) {
           this.search.tool_qr = this.search.tool_qr.slice(5, 11)
@@ -196,15 +287,267 @@ export default {
     },
   },
   methods: {
+    handlePageChange(page) {
+      this.meta.currentPage = page
+      this.$store.dispatch(ACTION_GET_TOOL_HISTORY, {
+        meta: this.meta,
+        tool_qr: this.search.tool_qr,
+      })
+    },
     async getToolsHistory() {
       try {
         await this.$store.dispatch(ACTION_GET_TOOL_HISTORY, {
-          meta: this.GET_META,
+          meta: this.meta,
           tool_qr: this.search.tool_qr,
         })
       } catch (error) {
         alert(error)
       }
+    },
+    async getGrafikQuality() {
+      try {
+        let response = await this.$store.dispatch(ACTION_GET_GRAFIK_QUALITY, {
+          tool_qr: this.search.tool_qr,
+        })
+        if (response.status === 200) {
+          const measurementData = response.data.data
+          console.log('measurementData', measurementData)
+
+          if (measurementData && Object.keys(measurementData).length > 0) {
+            this.prepareChartData(measurementData)
+          }
+        }
+      } catch (error) {
+        alert(error)
+      }
+    },
+    // prepareChartData(data) {
+    //   // console.log('prepareChartData', data)
+
+    //   this.chartDataList = Object.keys(data).map((measuringPortion) => {
+    //     // Mendapatkan dan membalikkan urutan values
+    //     const values = data[measuringPortion].values
+    //       .map((value) => parseFloat(value))
+    //       .reverse() // Membalik urutan values dari yang terakhir ke yang pertama
+
+    //     const upperLimit = parseFloat(data[measuringPortion].upper_limit)
+    //     const lowerLimit = parseFloat(data[measuringPortion].lower_limit)
+
+    //     const series = [
+    //       {
+    //         name: measuringPortion,
+    //         data: values,
+    //       },
+    //     ]
+
+    //     // Mendapatkan dan membalikkan urutan dates
+    //     const dates = data[measuringPortion].dates.reverse() // Membalik urutan dates untuk mengikuti urutan values
+
+    //     // Menggunakan dates sebagai categories di xaxis
+    //     const categories = dates.map((date) => date) // Menggunakan dates sebagai kategori
+
+    //     // Menghitung nilai minimum dan maksimum untuk menambahkan buffer
+    //     const minValue = Math.min(...values, lowerLimit)
+    //     const maxValue = Math.max(...values, upperLimit)
+    //     const buffer = (maxValue - minValue) * 0.1 // 10% buffer
+
+    //     const chartOptions = {
+    //       chart: {
+    //         id: `chart-${measuringPortion}`,
+    //       },
+    //       xaxis: {
+    //         categories,
+    //         axisBorder: {
+    //           show: true, // Menampilkan garis sumbu X
+    //           color: '#000', // Warna hitam untuk sumbu X
+    //         },
+    //         axisTicks: {
+    //           show: true, // Menampilkan ticks di sumbu X
+    //           color: '#000', // Warna hitam untuk ticks
+    //         },
+    //       },
+    //       yaxis: {
+    //         min: minValue - buffer,
+    //         max: maxValue + buffer,
+    //         axisBorder: {
+    //           show: true, // Menampilkan garis sumbu Y
+    //           color: '#000', // Warna hitam untuk sumbu Y
+    //         },
+    //         axisTicks: {
+    //           show: true, // Menampilkan ticks di sumbu Y
+    //           color: '#000', // Warna hitam untuk ticks
+    //         },
+    //       },
+    //       dataLabels: {
+    //         enabled: true,
+    //       },
+    //       grid: {
+    //         xaxis: {
+    //           lines: {
+    //             show: false, // Menampilkan garis pada sumbu x
+    //           },
+    //         },
+    //         yaxis: {
+    //           lines: {
+    //             show: false, // Menampilkan garis pada sumbu y
+    //           },
+    //         },
+    //       },
+    //       annotations: {
+    //         yaxis: [
+    //           {
+    //             y: upperLimit,
+    //             borderColor: '#00E396',
+    //             label: {
+    //               borderColor: '#00E396',
+    //               style: {
+    //                 color: '#fff',
+    //                 background: '#00E396',
+    //               },
+    //               text: `Upper Limit: ${upperLimit}`,
+    //             },
+    //           },
+    //           {
+    //             y: lowerLimit,
+    //             borderColor: '#FEB019',
+    //             label: {
+    //               borderColor: '#FEB019',
+    //               style: {
+    //                 color: '#fff',
+    //                 background: '#FEB019',
+    //               },
+    //               text: `Lower Limit: ${lowerLimit}`,
+    //             },
+    //           },
+    //         ],
+    //       },
+    //     }
+
+    //     return {
+    //       measuring_portion: measuringPortion,
+    //       chartOptions,
+    //       series,
+    //     }
+    //   })
+    //   // console.log('chartDataList', this.chartDataList)
+    // },
+    prepareChartData(data) {
+      this.chartDataList = Object.keys(data).map((measuringPortion) => {
+        const measuringData = data[measuringPortion]
+
+        // Gabungkan dates dan values untuk disortir
+        const combinedData = measuringData.dates.map((date, index) => ({
+          date,
+          value: parseFloat(measuringData.values[index]),
+        }))
+
+        // Urutkan berdasarkan dates secara ascending
+        combinedData.sort((a, b) => {
+          const dateA = moment(a.date, 'DD-MM-YYYY')
+          const dateB = moment(b.date, 'DD-MM-YYYY')
+          return dateA - dateB // Urutkan berdasarkan tanggal
+        })
+
+        // Pisahkan kembali ke dalam arrays dates dan values
+        const sortedDates = combinedData.map((item) => item.date)
+        const sortedValues = combinedData.map((item) => item.value)
+
+        const upperLimit = parseFloat(measuringData.upper_limit)
+        const lowerLimit = parseFloat(measuringData.lower_limit)
+
+        const series = [
+          {
+            name: measuringPortion,
+            data: sortedValues,
+          },
+        ]
+
+        const categories = sortedDates
+
+        const minValue = Math.min(...sortedValues, lowerLimit)
+        const maxValue = Math.max(...sortedValues, upperLimit)
+        const buffer = (maxValue - minValue) * 0.1
+
+        const chartOptions = {
+          chart: {
+            id: `chart-${measuringPortion}`,
+          },
+          xaxis: {
+            categories,
+            axisBorder: {
+              show: true,
+              color: '#000',
+            },
+            axisTicks: {
+              show: true,
+              color: '#000',
+            },
+          },
+          yaxis: {
+            min: minValue - buffer,
+            max: maxValue + buffer,
+            axisBorder: {
+              show: true,
+              color: '#000',
+            },
+            axisTicks: {
+              show: true,
+              color: '#000',
+            },
+          },
+          dataLabels: {
+            enabled: true,
+          },
+          grid: {
+            xaxis: {
+              lines: {
+                show: false,
+              },
+            },
+            yaxis: {
+              lines: {
+                show: false,
+              },
+            },
+          },
+          annotations: {
+            yaxis: [
+              {
+                y: upperLimit,
+                borderColor: '#00E396',
+                label: {
+                  borderColor: '#00E396',
+                  style: {
+                    color: '#fff',
+                    background: '#00E396',
+                  },
+                  text: `Upper Limit: ${upperLimit}`,
+                },
+              },
+              {
+                y: lowerLimit,
+                borderColor: '#FEB019',
+                label: {
+                  borderColor: '#FEB019',
+                  style: {
+                    color: '#fff',
+                    background: '#FEB019',
+                  },
+                  text: `Lower Limit: ${lowerLimit}`,
+                },
+              },
+            ],
+          },
+        }
+
+        return {
+          measuring_portion: measuringPortion,
+          chartOptions,
+          series,
+        }
+      })
+
+      console.log('chartDataList', this.chartDataList)
     },
   },
   components: {
@@ -213,6 +556,8 @@ export default {
     HistoricalGraphVue,
     HistoricalGraphVue2,
     HistoricalGraph167,
+    apexchart: VueApexCharts,
+    PaginationMaster,
   },
   mounted() {
     document.getElementById('qr-input').onblur = function () {

@@ -1,57 +1,74 @@
 <template>
   <div id="chart">
-    <apexchart type="line" height="350" :options="chartOptions" :series="series"></apexchart>
+    <apexchart
+      type="line"
+      height="350"
+      :options="chartOptions"
+      :series="series"
+    ></apexchart>
   </div>
 </template>
 <script>
 import VueApexCharts from 'vue3-apexcharts'
 export default {
-  name: "HistoricalGraph",
+  name: 'HistoricalGraph',
   data() {
     return {
-      series: [{
-        name: "Actual",
-        data: [10000, 10000, 10000, 10000, 10100, 10100, 10100, 10100]
-      }, {
-        name: "Standard",
-        data: [10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000]
-      }],
+      series: [
+        {
+          name: 'Actual',
+          data: [10000, 10010, 10015, 10025, 10100, 10100, 10100, 10100],
+        },
+        {
+          name: 'Standard',
+          data: [10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000],
+        },
+      ],
       chartOptions: {
         chart: {
           height: 350,
           type: 'line',
           zoom: {
-            enabled: false
-          }
+            enabled: false,
+          },
         },
         forecastDataPoints: {
-          count: 4
+          count: 4,
         },
         dataLabels: {
-          enabled: false
+          enabled: true,
         },
         stroke: {
-          curve: 'straight'
+          curve: 'straight',
         },
         title: {
           text: 'Tool Counter Status',
-          align: 'left'
+          align: 'left',
         },
         grid: {
           row: {
             colors: ['#f3f3f3', 'transparent'], // takes an array which will be repeated on columns
-            opacity: 0.5
+            opacity: 0.5,
           },
         },
         xaxis: {
-          categories: ['REGR#1', 'REGR#2', 'REGR#3', 'REGR#4', 'REGR#5', 'REGR#6', 'REGR#7', 'REGR#8'],
+          categories: [
+            '05-01-2024',
+            '20-03-2024',
+            '15-06-2024',
+            '21-08-2024',
+            'Challenge',
+            'Challenge',
+            'Challenge',
+            'Challenge',
+          ],
         },
       },
     }
   },
   components: {
-    apexchart: VueApexCharts
-  }
+    apexchart: VueApexCharts,
+  },
 }
 </script>
 <style></style>
