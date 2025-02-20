@@ -263,41 +263,28 @@
           <!-- Input Filter Mesin -->
           <div class="mb-3">
             <label for="machineFilter" class="form-label">Mesin</label>
-            <select
+            <v-select
               id="machineFilter"
-              class="form-select"
+              :options="GET_MACHINES_FOR_TOOL_CHANGE"
               v-model="machinesForTc"
-              @change="handleMachineChange"
-            >
-              <option
-                v-for="machine in GET_MACHINES_FOR_TOOL_CHANGE"
-                :key="machine.machine_id"
-                :value="machine"
-              >
-                {{ machine.machine_nm }}
-              </option>
-            </select>
+              label="machine_nm"
+              @update:modelValue="handleMachineChange"
+              placeholder="Pilih mesin..."
+            />
           </div>
 
           <!-- Input Filter Tool No -->
           <div class="mb-3">
             <label for="toolNoFilter" class="form-label">Tool No</label>
-            <select
+            <v-select
               id="toolNoFilter"
-              class="form-select"
+              :options="GET_TOOLS_NO_FOR_TOOL_CHANGE"
               v-model="toolsForTc"
-              @change="handleToolChange"
-            >
-              <option
-                v-for="tool in GET_TOOLS_NO_FOR_TOOL_CHANGE"
-                :key="tool.tool_id"
-                :value="tool"
-              >
-                {{ tool.tool_no }}/{{ tool.tool_nm }}
-              </option>
-            </select>
+              :getOptionLabel="formatToolLabelTool"
+              @update:modelValue="handleToolChange"
+              placeholder="Pilih Tool No..."
+            />
           </div>
-          <!-- Input Filter Act dan std counter -->
           <div v-if="modalTitle === 'Tool Bekas'" class="mb-3">
             <label for="actStdCounterFilter" class="form-label">Act</label>
             <div class="input-group">
@@ -324,19 +311,16 @@
               placeholder="Describe the problem"
             />
           </div>
-
           <!-- Input Filter PIC -->
           <div class="mb-3">
             <label for="operatorFilter" class="form-label">PIC</label>
-            <select id="operatorFilter" class="form-select" v-model="picTc">
-              <option
-                v-for="operator in GET_USERS_TREESELECT"
-                :key="operator.user_id"
-                :value="operator"
-              >
-                {{ operator.label }}
-              </option>
-            </select>
+            <v-select
+              id="operatorFilter"
+              :options="GET_USERS_TREESELECT"
+              v-model="picTc"
+              label="label"
+              placeholder="Pilih PIC..."
+            />
           </div>
         </div>
 
@@ -569,6 +553,8 @@ import {
   GET_TOOLS_NO_FOR_TOOL_CHANGE,
 } from '@/store/TMS/FirstCheck.module'
 import { GET_META } from '@/store/TMS/META.module'
+import vSelect from 'vue-select'
+import 'vue-select/dist/vue-select.css'
 
 import {
   ACTION_USERS_OPTS,
@@ -581,6 +567,7 @@ export default {
     PleaseScanQRTools,
     CardToolStatus,
     PaginationMaster,
+    vSelect,
   },
   name: 'ToolRegrindingSection',
   data() {
@@ -692,7 +679,7 @@ export default {
 
     search: {
       handler() {
-        console.log('search', this.search)
+        // console.log('search', this.search)
 
         if (this.search.tool_qr.length === 5)
           this.$store.dispatch(ACTION_TOOL_DETAILS, this.search)
@@ -711,7 +698,7 @@ export default {
           meta: this.meta,
         })
         .then(() => {
-          console.log('data tools', this.GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK)
+          // console.log('data tools', this.GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK)
         })
       this.getMachines()
       this.getFCheck()
@@ -721,7 +708,7 @@ export default {
       // Fetch users options when user_ln changes
       if (newUserLn) {
         this.$store.dispatch(ACTION_USERS_OPTS, newUserLn).then(() => {
-          console.log('get_user_treselec', this.GET_USERS_TREESELECT)
+          // console.log('get_user_treselec', this.GET_USERS_TREESELECT)
         })
       }
     },
@@ -736,13 +723,13 @@ export default {
     },
 
     unitCheck(newVal, oldVal) {
-      console.log(`unitCheck changed: ${oldVal} -> ${newVal}`)
+      // console.log(`unitCheck changed: ${oldVal} -> ${newVal}`)
       this.updateUnitCheck() // Perbarui data
     },
     stdFCheckData: {
       deep: true,
       handler(newVal) {
-        console.log('Updated stdFCheckData:', newVal)
+        // console.log('Updated stdFCheckData:', newVal)
       },
     },
   },
@@ -750,11 +737,15 @@ export default {
     async handleToolChange() {
       try {
         const selectedTool = this.toolsForTc
-        console.log('payload', selectedTool)
+        // console.log('payload', selectedTool)
         this.std_ctr = selectedTool.std_ctr
       } catch (error) {
         console.log(error)
       }
+    },
+    formatToolLabelTool(option) {
+      if (!option) return 'Tidak ada data' // Fallback jika option null atau undefined
+      return `${option.tool_no || 'N/A'} / ${option.tool_nm || 'N/A'}`
     },
     openModal(type) {
       if (type === 'new') {
@@ -771,37 +762,39 @@ export default {
         'Cylinder Head': 'CH',
       }
       this.user_ln = locationMap[this.location] || null
-      console.log('User LN updated to:', this.user_ln)
+      // console.log('User LN updated to:', this.user_ln)
     },
     async getMachines() {
-      console.log('kepanggil')
+      // console.log('kepanggil')
 
       try {
         const payload = { location: this.location } // Menggunakan this.location
-        console.log('payload', payload)
+        // console.log('payload', payload)
 
         let response = await this.$store.dispatch(
           ACTION_GET_MACHINES_FOR_TOOL_CHANGE,
           payload,
         )
         if (response.status === 200) {
-          console.log('response', this.GET_MACHINES_FOR_TOOL_CHANGE)
+          // console.log('response', this.GET_MACHINES_FOR_TOOL_CHANGE)
         }
       } catch (error) {
         console.log(error)
       }
     },
     async handleMachineChange() {
+      console.log('kepanggil')
+
       try {
         const opNo = this.machinesForTc.op_no
-        // console.log('Nilai op_no:', opNo)
-
+        console.log('Nilai op_no:', opNo)
         const op_no = opNo.replace(/\D/g, '') // Hapus semua karakter non-angka
         const payload = {
           op_no: op_no,
           location: this.location,
         }
         console.log('Angka dari op_no:', op_no) // Output misalnya: "50"
+
         let response = await this.$store.dispatch(
           ACTION_GET_TOOLS_NO_FOR_TOOL_CHANGE,
           payload,
@@ -850,7 +843,7 @@ export default {
 
         payload.pic = this.picTc.id || null // PIC dari modal
 
-        console.log('Payload toolchange:', payload)
+        // console.log('Payload toolchange:', payload)
         let response = await this.$store.dispatch(
           ACTION_ADD_HISTORY_TOOL_NO_QR,
           payload,
@@ -870,7 +863,7 @@ export default {
     },
 
     formatValueCheck(value) {
-      console.log('value', value) // Debug log untuk melihat tipe dan nilai
+      // console.log('value', value) // Debug log untuk melihat tipe dan nilai
 
       // Periksa apakah value adalah angka atau string yang dapat dikonversi menjadi angka
       if (!isNaN(parseFloat(value)) && isFinite(value)) {
@@ -933,16 +926,16 @@ export default {
         this.historyForTool = this.historyFCheckData.filter(
           (history) => history.tool_history_id === tool_history_id,
         )
-        console.log('this.historyFCheckData', this.historyFCheckData)
+        // console.log('this.historyFCheckData', this.historyFCheckData)
 
-        console.log('historyForTool', this.historyForTool)
+        // console.log('historyForTool', this.historyForTool)
 
         if (this.historyForTool.length > 0) {
           // Proses data history yang sesuai dengan tool_id
-          console.log('History data for this tool:', this.historyForTool)
+          // console.log('History data for this tool:', this.historyForTool)
           // Di sini Anda bisa melakukan tindakan lebih lanjut, misalnya menampilkan data di UI
         } else {
-          console.log('No history data found for this tool')
+          // console.log('No history data found for this tool')
         }
       } catch (error) {
         console.log(error)
@@ -953,7 +946,7 @@ export default {
         const payload = {
           location: this.location,
         }
-        console.log('payload', payload)
+        // console.log('payload', payload)
 
         // Mengambil data dari Vuex Store
         let response = await this.$store.dispatch(
@@ -1045,7 +1038,7 @@ export default {
             .replace(/([a-zA-Z0-9]+-\d+).*$/, '$1') // Ambil hanya bagian dengan format huruf-angka
         }
 
-        console.log('formattedToolNo', formattedToolNo)
+        // console.log('formattedToolNo', formattedToolNo)
 
         // Buat payload dengan tool_no yang telah diformat
         const payload = {
@@ -1067,7 +1060,7 @@ export default {
           this.stdFCheckData = []
           this.workNumbers = []
         }
-        console.log('this.stdFCheckData', this.stdFCheckData)
+        // console.log('this.stdFCheckData', this.stdFCheckData)
       } catch (error) {
         console.error(error)
       }
@@ -1098,7 +1091,7 @@ export default {
           })),
         )
         // Log payload untuk memverifikasi data
-        console.log('Payload yang akan dikirim:', payload)
+        // console.log('Payload yang akan dikirim:', payload)
         let response = await this.$store.dispatch(
           ACTION_ADD_H_TOOL_F_CHECK,
           payload,

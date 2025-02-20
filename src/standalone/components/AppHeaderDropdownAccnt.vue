@@ -1,15 +1,28 @@
-<!-- <template>
+<template>
   <CDropdown variant="nav-item">
-    <CDropdownToggle placement="bottom-end" class="py-0" href="javascript:void(0);">
-      {{userName}}&ensp;
-      <img  v-if="photo" :src="photo" class="rounded-circle" style="width: 36px; height: 36px;">
-      <CAvatar v-else="" color="danger " text-color="white">{{initial}}</CAvatar>
+    <CDropdownToggle
+      placement="bottom-end"
+      class="py-0"
+      href="javascript:void(0);"
+    >
+      {{ userName }}&ensp;
+      <img
+        v-if="photo"
+        :src="photo"
+        class="rounded-circle"
+        style="width: 36px; height: 36px"
+      />
+      <CAvatar v-else="" color="danger " text-color="white">{{
+        initial
+      }}</CAvatar>
     </CDropdownToggle>
     <CDropdownMenu class="pt-0">
       <CDropdownHeader component="h6" class="fw-semibold py-2">
         Account
       </CDropdownHeader>
-      <CDropdownItem href="/#/sc/profile"> <CIcon icon="cil-user" /> Profile </CDropdownItem>
+      <CDropdownItem href="/#/sc/profile">
+        <CIcon icon="cil-user" /> Profile
+      </CDropdownItem>
       <CDropdownDivider />
       <CDropdownItem href="#" @click="logout()">
         <CIcon icon="cilAccountLogout" /> Logout
@@ -18,7 +31,7 @@
   </CDropdown>
 </template>
 
-<script>
+<!-- <script>
 import avatar from '@/standalone/assets/images/avatars/8.jpg'
 import api from "@/apis/CommonAPI"
 export default {
@@ -52,7 +65,7 @@ export default {
     }
   }
 }
-</script> -->
+</script>
 <template>
   <CDropdown variant="nav-item">
     <CDropdownToggle
@@ -84,7 +97,7 @@ export default {
       </CDropdownItem>
     </CDropdownMenu>
   </CDropdown>
-</template>
+</template> -->
 
 <script>
 import avatar from '@/standalone/assets/images/avatars/8.jpg'

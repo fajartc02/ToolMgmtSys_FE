@@ -71,7 +71,7 @@ const mutations = {
     state.HISTORY_TOOL_F_CHECK = payload
   },
   SET_MACHINES_FOR_TOOL_CHANGE(state, payload) {
-    console.log('Payload before sorting:', payload)
+    // console.log('Payload before sorting:', payload)
 
     state.MACHINES_FOR_TOOL_CHANGE = payload
       .filter((machine) => typeof machine.machine_nm === 'string') // Filter data yang valid

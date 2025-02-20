@@ -23,7 +23,7 @@
                 v-model="registerToken"
                 id="registerToken"
                 class="form-control"
-                placeholder="Masukkan token"
+                placeholder="Secret Token"
               />
               <button
                 type="button"
