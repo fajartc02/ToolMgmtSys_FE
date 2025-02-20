@@ -4,7 +4,8 @@
       <div class="card p-2 mb-2">
         <div class="d-flex justify-content-between align-items-center">
           <h4 class="text-center m-0">History First Check</h4>
-          <select class="form-control form-select select-sm" v-model="location">
+          <select class="form-control form-select select-sm" 
+          v-model="location">
             <option v-for="item in optsLocation" :key="item" :value="item">
               {{ item }}
             </option>
@@ -188,6 +189,12 @@ export default {
         meta: this.meta,
       })
     },
+    location(newLocation) {
+      this.$store.dispatch(ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK, {
+        location: newLocation,
+        meta: this.meta,
+      })
+    }
   },
   mounted() {
     this.$store.dispatch(ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK, {

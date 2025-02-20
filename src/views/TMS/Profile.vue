@@ -1,12 +1,14 @@
 <template>
-  <div class="profile-container">
-    <div class="profile-card">
-      <div class="profile-header">
-        <img :src="photo" alt="Profile Photo" class="profile-photo" />
-      </div>
-      <div class="profile-body">
-        <h2 class="profile-name">{{ fullname }}</h2>
-        <p class="profile-noreg">Noreg: {{ noreg }}</p>
+  <div class="container-fluid">
+    <div class="card profile-card">
+      <div class="card-body">
+        <div class="profile-header">
+          <img :src="photo" alt="Profile Photo" class="profile-photo" />
+        </div>
+        <div class="profile-body">
+          <h2 class="profile-name">{{ fullname }}</h2>
+          <p class="profile-noreg">Noreg: {{ noreg }}</p>
+        </div>
       </div>
     </div>
   </div>
@@ -36,49 +38,62 @@ export default {
 </script>
 
 <style scoped>
-.profile-container {
+.container-fluid {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background-color: #f4f4f9;
-  margin: 0;
 }
 
 .profile-card {
-  background: #ffffff;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border-radius: 10px;
+  max-width: 400px;
+  background: #fff;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  text-align: center;
-  width: 320px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.profile-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
 }
 
 .profile-header {
-  background: linear-gradient(to right, #6a11cb, #2575fc);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #bdf1ed, #2575fc);
   padding: 20px;
 }
 
 .profile-photo {
-  width: 100px;
-  height: 100px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
-  border: 4px solid #ffffff;
+  border: 5px solid #fff;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.profile-photo:hover {
+  transform: scale(1.1);
 }
 
 .profile-body {
+  text-align: center;
   padding: 20px;
 }
 
 .profile-name {
-  font-size: 24px;
+  font-size: 26px;
   font-weight: bold;
-  margin: 10px 0;
+  margin-bottom: 10px;
   color: #333;
 }
 
 .profile-noreg {
   font-size: 16px;
-  color: #777;
+  color: #555;
+  margin-bottom: 0;
 }
 </style>
