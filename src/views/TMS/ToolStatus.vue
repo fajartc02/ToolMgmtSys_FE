@@ -17,7 +17,11 @@
     <CardToolStatus v-if="search.tool_qr != ''" :is_footer="false" />
     <!-- Kondisi untuk tool_qr selain A0167 dan A0256 -->
     <div
-      v-if="search.tool_qr !== 'A0167' && search.tool_qr !== 'A0256'"
+      v-if="
+        search.tool_qr !== 'A0167' &&
+        search.tool_qr !== 'A0256' &&
+        search.tool_qr != ''
+      "
       class="row"
     >
       <div class="col mt-1">
