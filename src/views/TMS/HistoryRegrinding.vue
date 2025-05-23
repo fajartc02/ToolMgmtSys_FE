@@ -4,7 +4,7 @@
       <div class="card p-2 mb-2">
         <div class="d-flex justify-content-between align-items-center">
           <h4 class="text-center m-0">History ReGrinding</h4>
-          <select
+          <!-- <select
             v-model="selectedPeriod"
             class="form-select select-sm"
             @change="handlePeriodChange"
@@ -12,7 +12,7 @@
             <option value="" disabled selected>Pilih Periode</option>
             <option value="day">Day</option>
             <option value="month">Month</option>
-          </select>
+          </select> -->
         </div>
       </div>
     </div>
