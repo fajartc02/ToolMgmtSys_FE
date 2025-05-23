@@ -139,6 +139,13 @@
             location == 'Cylinder Block'
           "
         >
+          <!-- <button
+            class="btn btn-info"
+            @click="showModal('toolChangeModal')"
+            :disabled="GET_TOOL_DETAILS?.is_scrab || !GET_TOOL_DETAILS"
+          >
+            Tool Change
+          </button> -->
           <button
             class="btn btn-info"
             @click="showModal('toolChangeModal')"
@@ -146,14 +153,14 @@
           >
             Tool Change
           </button>
-          .
+          <!-- .
           <button
             class="btn btn-secondary"
             @click="showModal('toolUsedModal')"
             :disabled="GET_TOOL_DETAILS?.is_scrab || !GET_TOOL_DETAILS"
           >
             Tool Used
-          </button>
+          </button> -->
           <!-- <button class="btn btn-success" @click="transferConfirmation(1)"
             :disabled="GET_TOOL_DETAILS?.is_scrab || !GET_TOOL_DETAILS">Transfer</button> -->
         </template>
@@ -183,27 +190,34 @@
     />
 
     <!-- PROD SCOPE -->
-    <ToolChangeAction
+    <!-- <ToolChangeAction
+      :modalShow="toolChangeModal"
+      :tool_type_id="GET_TOOL_DETAILS.tool_type_id"
+      @modal-show="(state) => dismissModal('toolChangeModal')"
+      :location="location"
+      :meta="meta"
+    /> -->
+    <ToolChangeMerge
       :modalShow="toolChangeModal"
       :tool_type_id="GET_TOOL_DETAILS.tool_type_id"
       @modal-show="(state) => dismissModal('toolChangeModal')"
       :location="location"
       :meta="meta"
     />
-    <ToolUsedAction
+    <!-- <ToolUsedAction
       :modalShow="toolUsedModal"
       @modal-show="(state) => dismissModal('toolUsedModal')"
       :location="location"
-    />
+    /> -->
   </template>
 </template>
 <script>
 import { ACTION_FOCUS_INPUT } from '@/store/TMS/focusInput.module'
 
-import ToolChangeAction from '@/components/TMS/Modals/ToolChangeAction.vue'
+import ToolChangeMerge from '@/components/TMS/Modals/ToolChangeMerge.vue'
 import SettingAction from '../Modals/SettingAction.vue'
 import RegringingAction from '../Modals/RegringingAction.vue'
-import ToolUsedAction from '../Modals/ToolUsedAction.vue'
+// import ToolUsedAction from '../Modals/ToolUsedAction.vue'
 import ScrabAction from '../Modals/ScrabAction.vue'
 import TransferAction from '../Modals/TransferAction.vue'
 
@@ -221,7 +235,7 @@ export default {
       toolChangeModal: false,
       settingModal: false,
       regrindingModal: false,
-      toolUsedModal: false,
+      // toolUsedModal: false,
       scrabModal: false,
       transferModal: false,
     }
@@ -277,10 +291,11 @@ export default {
     },
   },
   components: {
-    ToolChangeAction,
+    // ToolChangeAction,
+    ToolChangeMerge,
     SettingAction,
     RegringingAction,
-    ToolUsedAction,
+    // ToolUsedAction,
     ScrabAction,
     TransferAction,
   },

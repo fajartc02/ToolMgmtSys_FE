@@ -62,7 +62,17 @@
             </div>
           </div>
         </div>
-
+        <div class="card p-2 mb-2">
+          <div class="d-flex justify-content-between align-items-center">
+            <h4 class="text-center m-0"></h4>
+            <input
+              type="text"
+              v-model="searchQr"
+              class="form-control select-sm"
+              placeholder="Search QR Tag"
+            />
+          </div>
+        </div>
         <table
           class="table table-bordered table-striped"
           style="text-align: center"
@@ -155,6 +165,7 @@ export default {
     return {
       showSettingChart: true,
       selectedPeriod: 'day',
+      searchQr: '',
       meta: {
         totalData: 0,
         currentPage: 1,
@@ -179,11 +190,31 @@ export default {
       this.meta = this.GET_META
     },
     'meta.itemsPerPage': function () {
-      this.$store.dispatch(ACTION_GET_SETTING_HISTORY, { meta: this.meta })
+      this.$store.dispatch(ACTION_GET_SETTING_HISTORY, {
+        meta: this.meta,
+        tool_qr: this.searchQr,
+      })
+    },
+    searchQr: {
+      async handler() {
+        if (this.searchQr.length === 5) {
+          await this.$store.dispatch(ACTION_GET_SETTING_HISTORY, {
+            meta: this.meta,
+            tool_qr: this.searchQr,
+          })
+        }
+        if (this.searchQr.length >= 10) {
+          this.searchQr = this.searchQr.slice(5, 11)
+        }
+      },
+      deep: true,
     },
   },
   mounted() {
-    this.$store.dispatch(ACTION_GET_SETTING_HISTORY, { meta: this.meta })
+    this.$store.dispatch(ACTION_GET_SETTING_HISTORY, {
+      meta: this.meta,
+      tool_qr: this.searchQr,
+    })
     this.handlePeriodChange()
     document.addEventListener('click', this.handleClickOutside)
   },
@@ -194,7 +225,10 @@ export default {
     handlePageChange(page) {
       this.meta.currentPage = page
       this.$store
-        .dispatch(ACTION_GET_SETTING_HISTORY, { meta: this.meta })
+        .dispatch(ACTION_GET_SETTING_HISTORY, {
+          meta: this.meta,
+          tool_qr: this.searchQr,
+        })
         .then(() => {
           this.chartDataList = []
         })

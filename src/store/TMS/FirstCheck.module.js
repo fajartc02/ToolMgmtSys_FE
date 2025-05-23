@@ -34,6 +34,8 @@ export const GET_TOOLS_NO_FOR_TOOL_CHANGE = 'GET_TOOLS_NO_FOR_TOOL_CHANGE'
 
 export const ACTION_ADD_HISTORY_TOOL_NO_QR = 'ACTION_ADD_HISTORY_TOOL_NO_QR'
 
+export const ACTION_GET_TOOL_HYSTORY_BY_QR = 'ACTION_GET_TOOL_HYSTORY_BY_QR'
+
 const state = {
   TOOLS_BY_LOCATION_FOR_FIRST_CHECK: [],
   STD_TOOL_F_CHECK: [],
@@ -104,6 +106,7 @@ const actions = {
         params: {
           location: query.location,
           meta: query.meta,
+          tool_qr: query.tool_qr,
         },
       })
       commit(SET_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK, response.data.data.data)
@@ -191,6 +194,21 @@ const actions = {
         `${API_URL}/tools-by-location/history-tool-no-qr`,
         query,
       )
+      return response
+    } catch (error) {
+      console.error(error)
+      return { status: error.response ? error.response.status : 500 }
+    }
+  },
+  async ACTION_GET_TOOL_HYSTORY_BY_QR({ commit }, query) {
+    try {
+      const response = await axios.get(
+        `${API_URL}/tools-by-location/get-tool-history-by-qr`,
+        {
+          params: query,
+        },
+      )
+      commit(SET_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK, response.data.data)
       return response
     } catch (error) {
       console.error(error)

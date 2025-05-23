@@ -4,8 +4,7 @@
       <div class="card p-2 mb-2">
         <div class="d-flex justify-content-between align-items-center">
           <h4 class="text-center m-0">History First Check</h4>
-          <select class="form-control form-select select-sm" 
-          v-model="location">
+          <select class="form-control form-select select-sm" v-model="location">
             <option v-for="item in optsLocation" :key="item" :value="item">
               {{ item }}
             </option>
@@ -63,6 +62,18 @@
           </div>
         </div>
 
+        <div class="card p-2 mb-2">
+          <div class="d-flex justify-content-between align-items-center">
+            <h4 class="text-center m-0"></h4>
+            <input
+              type="text"
+              v-model="searchQr"
+              class="form-control select-sm"
+              placeholder="Search QR Tag"
+            />
+          </div>
+        </div>
+
         <table
           class="table table-bordered table-striped"
           style="text-align: center"
@@ -71,7 +82,9 @@
             <tr>
               <th>No</th>
               <th>Tool ID</th>
-              <th>Setting Date</th>
+              <th>QR Tag</th>
+              <th>First Check Date</th>
+              <th>Mesin</th>
               <th>PIC</th>
               <th>Data Quality</th>
             </tr>
@@ -83,7 +96,9 @@
             >
               <td>{{ Histories.no }}</td>
               <td>{{ Histories.tool_no }}</td>
+              <td>{{ Histories.tool_qr }}</td>
               <td>{{ Histories.created_dt }}</td>
+              <td>{{ Histories.machine_nm }}</td>
               <td>{{ Histories.pic_check }}</td>
               <td>
                 <button
@@ -134,6 +149,7 @@ import { GET_META } from '@/store/TMS/META.module'
 import VueApexCharts from 'vue3-apexcharts'
 import { mapGetters } from 'vuex'
 import {
+  ACTION_GET_TOOL_HYSTORY_BY_QR,
   ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK,
   GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK,
 } from '@/store/TMS/FirstCheck.module'
@@ -153,6 +169,7 @@ export default {
   },
   data() {
     return {
+      searchQr: '',
       showFirstCheckChart: true,
       meta: {
         totalData: 0,
@@ -194,13 +211,35 @@ export default {
         location: newLocation,
         meta: this.meta,
       })
-    }
+    },
+    searchQr: {
+      async handler() {
+        if (this.searchQr.length === 5) {
+          await this.$store.dispatch(
+            ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK,
+            {
+              meta: this.meta,
+              location: this.location,
+              tool_qr: this.searchQr,
+            },
+          )
+        }
+        if (this.searchQr.length >= 10) {
+          this.searchQr = this.searchQr.slice(5, 11)
+        }
+      },
+      deep: true,
+    },
   },
   mounted() {
-    this.$store.dispatch(ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK, {
-      location: this.location,
-      meta: this.meta,
-    })
+    this.$store
+      .dispatch(ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK, {
+        location: this.location,
+        meta: this.meta,
+      })
+      .then(() => {
+        console.log('data tools', this.GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK)
+      })
     document.addEventListener('click', this.handleClickOutside)
   },
   beforeDestroy() {

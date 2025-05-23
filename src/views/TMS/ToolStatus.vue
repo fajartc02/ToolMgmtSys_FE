@@ -15,8 +15,12 @@
       </div>
     </div>
     <CardToolStatus v-if="search.tool_qr != ''" :is_footer="false" />
-    <div class="row">
-      <div v-if="search.tool_qr != ''" class="col mt-1">
+    <!-- Kondisi untuk tool_qr selain A0167 dan A0256 -->
+    <div
+      v-if="search.tool_qr !== 'A0167' && search.tool_qr !== 'A0256'"
+      class="row"
+    >
+      <div class="col mt-1">
         <div
           v-for="(chartData, index) in chartDataList"
           :key="index"
@@ -37,30 +41,23 @@
         </div>
       </div>
       <div class="col">
-        <div v-if="search.tool_qr != ''" class="card mt-1">
+        <div class="card mt-1">
           <HistoricalGraphVue
             :tool_qr="search.tool_qr"
             :system_activity="'USED'"
           />
         </div>
-        <!-- <div v-if="search.tool_qr == 'A0167'" class="card mt-1">
-          <HistoricalGraph167 v-if="search.tool_qr != ''" />
-        </div>
-        <div v-if="search.tool_qr == 'A0256'" class="card mt-1">
-          <HistoricalGraphVue2 v-if="search.tool_qr != ''" />
-        </div> -->
-        <!-- v-if="search.tool_qr == 'A0167' || search.tool_qr == 'A0256'" -->
-        <!-- <div v-if="search.tool_qr != ''" class="card mt-1">
-          <HistoricalGraphVue
-            v-if="search.tool_qr !== 'A0167' && search.tool_qr !== 'A0256'"
-            :tool_qr="search.tool_qr"
-            :system_activity="'USED'"
-          />
-          <HistoricalGraph167 v-else-if="search.tool_qr === 'A0167'" />
-          <HistoricalGraphVue2 v-else-if="search.tool_qr === 'A0256'" />
-        </div> -->
       </div>
     </div>
+
+    <!-- Kondisi khusus hanya untuk A0167 atau A0256 -->
+    <div v-else class="col">
+      <div class="card mt-1">
+        <HistoricalGraph167 v-if="search.tool_qr === 'A0167'" />
+        <HistoricalGraphVue2 v-else-if="search.tool_qr === 'A0256'" />
+      </div>
+    </div>
+
     <div
       v-if="search.tool_qr != ''"
       class="d-flex justify-content-center align-items-start mt-2"
@@ -79,7 +76,8 @@
                 <th>Activity</th>
                 <th>Date</th>
                 <th>Tool Name</th>
-                <th>Location</th>
+                <th>Last Activity</th>
+                <th>Position</th>
                 <th>Std Counter</th>
                 <th>Actual Counter</th>
                 <th>PIC</th>
@@ -96,6 +94,7 @@
                   <td>{{ toolHistory.date_check }}</td>
                   <td>{{ toolHistory.tool_no }}</td>
                   <td>{{ toolHistory.distribution_nm }}</td>
+                  <td>{{ toolHistory.machine_nm }}</td>
                   <td>{{ toolHistory.std_counter }}</td>
                   <td>{{ toolHistory.act_counter }}</td>
                   <td>{{ toolHistory.pic_check }}</td>

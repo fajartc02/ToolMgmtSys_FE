@@ -22,6 +22,7 @@ import MasterToolFCModule from './TMS/MasterToolFC.module'
 import FirstCheckModule from './TMS/FirstCheck.module'
 import FirstCheckHistoryModule from './TMS/FirstCheckHistory.module'
 import auth from './TMS/auth'
+import MergeToolChangeUsedModule from './TMS/MergeToolChangeUsed.module'
 
 export default createStore({
   state: {
@@ -60,5 +61,6 @@ export default createStore({
     FirstCheckModule,
     FirstCheckHistoryModule,
     auth,
+    MergeToolChangeUsedModule,
   },
 })
