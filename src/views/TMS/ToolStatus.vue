@@ -78,14 +78,15 @@
             <thead>
               <tr>
                 <th>Activity</th>
+                <th>Detail Activity</th>
                 <th>Date</th>
                 <th>Tool Name</th>
-                <th>Last Activity</th>
                 <th>Position</th>
+                <th>Regrinding</th>
                 <th>Std Counter</th>
                 <th>Actual Counter</th>
-                <th>PIC</th>
                 <th>Problem</th>
+                <th>PIC</th>
               </tr>
             </thead>
             <tbody>
@@ -95,14 +96,15 @@
                   :key="toolHistory.id"
                 >
                   <td>{{ toolHistory.system_activity }}</td>
+                  <td>{{ toolHistory.distribution_nm }}</td>
                   <td>{{ toolHistory.date_check }}</td>
                   <td>{{ toolHistory.tool_no }}</td>
-                  <td>{{ toolHistory.distribution_nm }}</td>
                   <td>{{ toolHistory.machine_nm }}</td>
+                  <td>{{ toolHistory.reg_cnt }}</td>
                   <td>{{ toolHistory.std_counter }}</td>
                   <td>{{ toolHistory.act_counter }}</td>
-                  <td>{{ toolHistory.pic_check }}</td>
                   <td>{{ toolHistory.system_problem }}</td>
+                  <td>{{ toolHistory.pic_check }}</td>
                 </tr>
               </template>
               <template v-else>

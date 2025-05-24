@@ -56,6 +56,7 @@
               <th>Tool ID</th>
               <th>QR Tag</th>
               <th>Regrinding Date</th>
+              <th>Regrinding Ke</th>
               <th>PIC</th>
               <th>Std Counter</th>
               <th>Actual Counter</th>
@@ -72,6 +73,7 @@
               <td>{{ Histories.tool_no }}</td>
               <td>{{ Histories.tool_qr }}</td>
               <td>{{ Histories.date_check }}</td>
+              <td>{{ Histories.reg_cnt }}</td>
               <td>{{ Histories.pic_check }}</td>
               <td>{{ Histories.std_counter }}</td>
               <td>{{ Histories.act_counter }}</td>
