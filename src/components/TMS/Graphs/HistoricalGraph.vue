@@ -7,9 +7,6 @@
       :series="series"
     ></apexchart>
   </div>
-  <div class="p-2" v-else>
-    <h2 class="text-muted text-center">Tidak Ada Grafik</h2>
-  </div>
 </template>
 <script>
 import { ACTION_GRAPH, GET_GRAPH } from '@/store/TMS/GRAPH.module'

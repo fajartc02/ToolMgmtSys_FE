@@ -1,4 +1,51 @@
 <template>
+  <div class="modal" tabindex="-1" id="modalEditMesin">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Mesin</h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            @click="editTool = null"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="machineFilter" class="form-label">Mesin</label>
+            <v-select
+              id="machineFilter"
+              :options="GET_MACHINES_FOR_TOOL_CHANGE"
+              v-model="selectedMachine"
+              label="machine_nm"
+              placeholder="Pilih mesin..."
+              :reduce="(machine) => machine.machine_id"
+            />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+            @click="editTool = null"
+          >
+            Close
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            data-bs-dismiss="modal"
+            @click="updateMachine"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="modal" tabindex="-1" id="modalStdFCheck">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -41,6 +88,7 @@
               class="form-control"
               v-model="workNumbers[index]"
               placeholder="Masukkan nomor work"
+              @input="workNumbers[index] = workNumbers[index]?.toUpperCase()"
             />
           </div>
           <!-- Daftar Hasil First Check -->
@@ -453,6 +501,8 @@
               <th scope="col">Tanggal</th>
               <th scope="col">PIC</th>
               <th scope="col">Tool</th>
+              <th>Tool No</th>
+              <th scope="col">QR Code</th>
               <th scope="col">Mesin</th>
               <th scope="col">Check</th>
               <th scope="col">View</th>
@@ -468,8 +518,22 @@
               <td>{{ tool.no }}</td>
               <td>{{ tool.created_dt }}</td>
               <td>{{ tool.pic_check }}</td>
+              <td>{{ tool.tool_nm }}</td>
               <td>{{ tool.tool_no }}</td>
-              <td>{{ tool.machine_nm }}</td>
+              <td>{{ tool.tool_qr }}</td>
+              <td>
+                <div>
+                  <div>{{ tool.machine_nm }}</div>
+                  <!-- <button
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalEditMesin"
+                    class="btn btn-primary btn-sm mt-1"
+                    @click="prepareEdit(tool)"
+                  >
+                    <i class="fas fa-edit"></i>
+                  </button> -->
+                </div>
+              </td>
               <td>
                 <button
                   class="btn btn-primary"
@@ -544,11 +608,14 @@ import {
   ACTION_GET_HISTORY_FIRST_CHECK,
   ACTION_GET_MACHINES_FOR_TOOL_CHANGE,
   ACTION_GET_STD_TOOL_F_CHECK,
+  ACTION_GET_TOOL_NO,
   ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK,
   ACTION_GET_TOOLS_NO_FOR_TOOL_CHANGE,
+  ACTION_UPDATE_MACHINE_FOR_TOOL_CHANGE,
   GET_HISTORY_TOOL_F_CHECK,
   GET_MACHINES_FOR_TOOL_CHANGE,
   GET_STD_TOOL_F_CHECK,
+  GET_TOOL_NO,
   GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK,
   GET_TOOLS_NO_FOR_TOOL_CHANGE,
 } from '@/store/TMS/FirstCheck.module'
@@ -605,6 +672,9 @@ export default {
       act_ctr: 0,
       std_ctr: '',
       problemDescription: '',
+      editTool: null,
+      selectedMachine: null,
+      originalMachineId: null,
     }
   },
   computed: {
@@ -617,15 +687,32 @@ export default {
       GET_MACHINES_FOR_TOOL_CHANGE,
       GET_TOOLS_NO_FOR_TOOL_CHANGE,
       GET_USERS_TREESELECT,
+      GET_TOOL_NO,
     ]),
     toolsWithStatus() {
       return this.GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK.map((tool) => {
         const isFound = this.historyFCheckData.some(
           (history) => history.tool_history_id === tool.tool_history_id,
         )
-        return { ...tool, isFound }
+
+        const toolNameNormalized = this.normalizeToolName(tool.tool_nm)
+
+        const matchedTool = this.GET_TOOL_NO.find((t) => {
+          const tNameNormalized = this.normalizeToolName(t.tool_nm)
+          return (
+            tNameNormalized.includes(toolNameNormalized) ||
+            toolNameNormalized.includes(tNameNormalized)
+          )
+        })
+
+        return {
+          ...tool,
+          isFound,
+          tool_no: matchedTool ? matchedTool.tool_no : null,
+        }
       })
     },
+
     isFormValid() {
       // // Pastikan jumlah unit check sudah diisi
       if (this.unitCheck <= 0) return false
@@ -692,14 +779,14 @@ export default {
     location() {
       // console.log(`[DEBUG] Location changed to: ${this.location}`)
       this.meta.currentPage = 1
-      this.$store
-        .dispatch(ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK, {
-          location: this.location,
-          meta: this.meta,
-        })
-        .then(() => {
-          // console.log('data tools', this.GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK)
-        })
+      this.$store.dispatch(ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK, {
+        location: this.location,
+        meta: this.meta,
+      })
+      this.$store.dispatch(ACTION_GET_TOOL_NO, {
+        location: this.location,
+      })
+      console.log('data get tool_no', this.GET_TOOL_NO)
       this.getMachines()
       this.getFCheck()
       this.updateUserLn()
@@ -734,6 +821,43 @@ export default {
     },
   },
   methods: {
+    normalizeToolName(name) {
+      return name?.toLowerCase().replace(/[\s\-]/g, '')
+    },
+    prepareEdit(tool) {
+      this.editTool = tool
+      this.selectedMachine = tool.machine_id
+      this.originalMachineId = tool.machine_id
+    },
+    async updateMachine() {
+      try {
+        const payload = {
+          old_machine_id: this.originalMachineId, // sebelum diubah
+          new_machine_id: this.selectedMachine, // setelah diubah
+          tool_history_id: this.editTool.tool_history_id,
+          tool_id: this.editTool.tool_id,
+          system_activity: this.editTool.system_activity,
+          location: this.location,
+          tool_qr: this.editTool.tool_qr,
+        }
+        console.log('payload', payload)
+
+        let response = await this.$store.dispatch(
+          ACTION_UPDATE_MACHINE_FOR_TOOL_CHANGE,
+          { meta: this.meta, payload },
+        )
+        if (response.status === 200) {
+          this.$store.dispatch(ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK, {
+            meta: this.meta,
+            location: this.location,
+          })
+          this.$swal('Success', 'Sukses Edit Mesin', 'success')
+        }
+      } catch (error) {
+        console.log(error)
+        this.$swal('Error', 'Gagal Edit Mesin', 'error')
+      }
+    },
     async handleToolChange() {
       try {
         const selectedTool = this.toolsForTc
@@ -1199,6 +1323,7 @@ export default {
       location: this.location,
       meta: this.meta,
     })
+
     this.updateUnitCheck()
   },
 }

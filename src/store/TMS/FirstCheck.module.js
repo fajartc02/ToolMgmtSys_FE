@@ -36,12 +36,20 @@ export const ACTION_ADD_HISTORY_TOOL_NO_QR = 'ACTION_ADD_HISTORY_TOOL_NO_QR'
 
 export const ACTION_GET_TOOL_HYSTORY_BY_QR = 'ACTION_GET_TOOL_HYSTORY_BY_QR'
 
+export const ACTION_UPDATE_MACHINE_FOR_TOOL_CHANGE =
+  'ACTION_UPDATE_MACHINE_FOR_TOOL_CHANGE'
+
+export const ACTION_GET_TOOL_NO = 'ACTION_GET_TOOL_NO'
+export const GET_TOOL_NO = 'GET_TOOL_NO'
+export const SET_TOOL_NO = 'SET_TOOL_NO'
+
 const state = {
   TOOLS_BY_LOCATION_FOR_FIRST_CHECK: [],
   STD_TOOL_F_CHECK: [],
   HISTORY_TOOL_F_CHECK: [],
   MACHINES_FOR_TOOL_CHANGE: [],
   TOOLS_NO_FOR_TOOL_CHANGE: [],
+  DATA_TOOLS_NO: [],
 }
 
 const getters = {
@@ -59,6 +67,9 @@ const getters = {
   },
   GET_TOOLS_NO_FOR_TOOL_CHANGE(state) {
     return state.TOOLS_NO_FOR_TOOL_CHANGE
+  },
+  GET_TOOL_NO(state) {
+    return state.DATA_TOOLS_NO
   },
 }
 
@@ -96,6 +107,9 @@ const mutations = {
 
   SET_TOOLS_NO_FOR_TOOL_CHANGE(state, payload) {
     state.TOOLS_NO_FOR_TOOL_CHANGE = payload
+  },
+  SET_TOOL_NO(state, payload) {
+    state.DATA_TOOLS_NO = payload
   },
 }
 
@@ -209,6 +223,33 @@ const actions = {
         },
       )
       commit(SET_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK, response.data.data)
+      return response
+    } catch (error) {
+      console.error(error)
+      return { status: error.response ? error.response.status : 500 }
+    }
+  },
+
+  async ACTION_UPDATE_MACHINE_FOR_TOOL_CHANGE({ commit }, query) {
+    try {
+      const response = await axios.put(
+        `${API_URL}/tools-by-location/edit-machine`,
+        query,
+      )
+      return response
+    } catch (error) {
+      console.error(error)
+    }
+  },
+  async ACTION_GET_TOOL_NO({ commit }, query) {
+    try {
+      const response = await axios.get(
+        `${API_URL}/tools-by-location/get-tool-no`,
+        {
+          params: query,
+        },
+      )
+      commit(SET_TOOL_NO, response.data.data)
       return response
     } catch (error) {
       console.error(error)

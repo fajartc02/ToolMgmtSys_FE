@@ -15,6 +15,7 @@
       </div>
     </div>
     <CardToolStatus v-if="search.tool_qr != ''" :is_footer="false" />
+
     <!-- Kondisi untuk tool_qr selain A0167 dan A0256 -->
     <div
       v-if="
@@ -24,38 +25,55 @@
       "
       class="row"
     >
-      <div class="col mt-1">
-        <div
-          v-for="(chartData, index) in chartDataList"
-          :key="index"
-          class="mb-1"
-          ref="chartCard"
-        >
-          <div class="card">
-            <div class="card-body">
-              <h5>{{ chartData.measuring_portion }}</h5>
-              <apexchart
-                type="line"
-                height="300"
-                :options="chartData.chartOptions"
-                :series="chartData.series"
-              ></apexchart>
+      <!-- Jika chartDataList ada isinya -->
+      <template v-if="chartDataList.length > 0 && search.tool_qr.length >= 5">
+        <div class="col mt-1">
+          <div
+            v-for="(chartData, index) in chartDataList"
+            :key="index"
+            class="mb-1"
+            ref="chartCard"
+          >
+            <div class="card">
+              <div class="card-body">
+                <h5>{{ chartData.measuring_portion }}</h5>
+                <apexchart
+                  type="line"
+                  height="300"
+                  :options="chartData.chartOptions"
+                  :series="chartData.series"
+                ></apexchart>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      <div class="col">
-        <div class="card mt-1">
-          <HistoricalGraphVue
-            :tool_qr="search.tool_qr"
-            :system_activity="'USED'"
-          />
+        <div class="col">
+          <div class="card mt-1">
+            <HistoricalGraphVue
+              :tool_qr="search.tool_qr"
+              :system_activity="'USED'"
+            />
+          </div>
         </div>
-      </div>
+      </template>
+
+      <!-- Jika chartDataList kosong -->
+      <template v-else>
+        <div class="col-12">
+          <div class="card mt-3 text-center">
+            <div class="card-body">
+              <h1 class="text-muted">Data belum Tersedia</h1>
+            </div>
+          </div>
+        </div>
+      </template>
     </div>
 
     <!-- Kondisi khusus hanya untuk A0167 atau A0256 -->
-    <div v-else class="col">
+    <div
+      v-if="search.tool_qr === 'A0167' || search.tool_qr === 'A0256'"
+      class="col-12"
+    >
       <div class="card mt-1">
         <HistoricalGraph167 v-if="search.tool_qr === 'A0167'" />
         <HistoricalGraphVue2 v-else-if="search.tool_qr === 'A0256'" />
@@ -109,7 +127,7 @@
               </template>
               <template v-else>
                 <tr>
-                  <th colspan="9">
+                  <th colspan="10">
                     <h3 class="text-center text-muted bg-transparent">
                       No data found
                     </h3>
@@ -289,6 +307,11 @@ export default {
         }
       },
       deep: true,
+    },
+    'search.tool_qr'(newVal) {
+      if (!newVal) {
+        this.chartDataList = []
+      }
     },
   },
   methods: {
