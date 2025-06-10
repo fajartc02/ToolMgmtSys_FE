@@ -1146,7 +1146,7 @@ export default {
         // console.log('selectedTool', this.selectedTool)
 
         // Perlakuan khusus untuk tool_no
-        let formattedToolNo = tool.tool_no
+        let formattedToolNo = tool.tool_nm
 
         // Cek apakah sesuai dengan pola khusus (termasuk angka tambahan seperti -10)
         const specialPattern = /^([A-Z]+)\s*-\s*(\d+)\s*CH\s*OP\s*(10)(-\d+)?$/
@@ -1157,7 +1157,7 @@ export default {
           formattedToolNo = `${match[1]}-${match[2]}-OP${match[3]}`
         } else {
           // Format default jika tidak sesuai pola
-          formattedToolNo = tool.tool_no
+          formattedToolNo = tool.tool_nm
             .replace(/\s*-\s*/g, '-') // Hapus spasi di sekitar tanda '-'
             .replace(/([a-zA-Z0-9]+-\d+).*$/, '$1') // Ambil hanya bagian dengan format huruf-angka
         }
