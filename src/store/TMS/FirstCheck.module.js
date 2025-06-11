@@ -121,12 +121,14 @@ const actions = {
           location: query.location,
           meta: query.meta,
           tool_qr: query.tool_qr,
+          machine_id: query.machine_id,
         },
       })
       commit(SET_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK, response.data.data.data)
       // console.log('tools', response.data.data.data)
 
       commit(SET_META, response.data.data.meta)
+      return response
     } catch (error) {
       console.error('Error fetching tools:', error)
     }

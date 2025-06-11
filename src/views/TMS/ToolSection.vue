@@ -478,6 +478,52 @@
       </div>
     </div>
 
+    <!-- filter search table -->
+    <div
+      v-if="this.location != 'Tool Regrinding' && this.location != 'Clean Room'"
+      class="card mt-2"
+    >
+      <div class="card-header">
+        <h5>Filter</h5>
+      </div>
+      <div class="d-flex align-items-end gap-2 p-2">
+        <!-- Select Mesin -->
+        <div style="width: 50%">
+          <label
+            for="machineFilter"
+            class="form-label"
+            style="font-weight: bold"
+            >Mesin</label
+          >
+          <v-select
+            id="machineFilter"
+            :options="GET_MACHINES_FOR_TOOL_CHANGE"
+            v-model="machinesForTc"
+            label="machine_nm"
+            @update:modelValue="handleMachineChange"
+            placeholder="Pilih mesin..."
+            :append-to-body="true"
+          />
+        </div>
+
+        <!-- Select Tool No -->
+        <div style="width: 50%">
+          <label for="toolNoFilter" class="form-label" style="font-weight: bold"
+            >Tool No</label
+          >
+          <v-select
+            id="toolNoFilter"
+            :options="GET_TOOLS_NO_FOR_TOOL_CHANGE"
+            v-model="toolsForTc"
+            :getOptionLabel="formatToolLabelTool"
+            @update:modelValue="searchTool"
+            placeholder="Pilih Tool No..."
+            :append-to-body="true"
+          />
+        </div>
+      </div>
+    </div>
+
     <!-- Tabel Data Tools -->
     <div
       v-if="
@@ -488,7 +534,7 @@
           'Cam Shaft',
         ].includes(location)
       "
-      class="card mt-4"
+      class="card mt-2"
     >
       <div class="card-header">
         <h5>List Tools Line {{ location }}</h5>
@@ -509,7 +555,7 @@
               <th scope="col">Status</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody v-if="toolsWithStatus.length > 0">
             <tr
               v-for="tool in toolsWithStatus"
               :key="tool.tool_history_id"
@@ -557,6 +603,11 @@
               <td :class="getStatusClass(tool.tool_history_id)">
                 <strong>{{ getStatus(tool.tool_history_id) }}</strong>
               </td>
+            </tr>
+          </tbody>
+          <tbody v-else>
+            <tr>
+              <td colspan="10">Tidak ada data</td>
             </tr>
           </tbody>
         </table>
@@ -675,6 +726,7 @@ export default {
       editTool: null,
       selectedMachine: null,
       originalMachineId: null,
+      filteredTools: null,
     }
   },
   computed: {
@@ -690,7 +742,26 @@ export default {
       GET_TOOL_NO,
     ]),
     toolsWithStatus() {
-      return this.GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK.map((tool) => {
+      let tools = this.GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK
+
+      const inputToolNo = this.toolsForTc?.tool_no?.trim()
+      if (inputToolNo) {
+        tools = tools.filter((tool) => {
+          const toolNameNormalized = this.normalizeToolName(tool.tool_nm)
+
+          const matchedTool = this.GET_TOOL_NO.find((t) => {
+            const tNameNormalized = this.normalizeToolName(t.tool_nm)
+            return (
+              tNameNormalized.includes(toolNameNormalized) ||
+              toolNameNormalized.includes(tNameNormalized)
+            )
+          })
+
+          return matchedTool?.tool_no === inputToolNo
+        })
+      }
+
+      return tools.map((tool) => {
         const isFound = this.historyFCheckData.some(
           (history) => history.tool_history_id === tool.tool_history_id,
         )
@@ -821,6 +892,26 @@ export default {
     },
   },
   methods: {
+    async searchTool() {
+      const tool_no = this.toolsForTc?.tool_no
+      console.log('tool_no', tool_no)
+
+      if (!tool_no) {
+        // Kosongkan hasil filter kalau tool_no kosong
+        this.filteredTools = null
+        return
+      }
+
+      const payload = {
+        location: this.location,
+        machine_id: this.machinesForTc.machine_id,
+        meta: this.meta,
+      }
+      await this.$store.dispatch(
+        ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK,
+        payload,
+      )
+    },
     normalizeToolName(name) {
       return name?.toLowerCase().replace(/[\s\-]/g, '')
     },
@@ -924,7 +1015,7 @@ export default {
           payload,
         )
         if (response.status === 200) {
-          console.log('response', this.GET_TOOLS_NO_FOR_TOOL_CHANGE)
+          // console.log('response', this.GET_TOOLS_NO_FOR_TOOL_CHANGE)
         }
       } catch (error) {
         console.error(error)

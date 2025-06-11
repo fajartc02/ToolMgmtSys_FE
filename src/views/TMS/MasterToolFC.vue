@@ -234,7 +234,7 @@
               </tbody>
               <tbody v-else>
                 <tr>
-                  <td colspan="7" class="text-center">No Data</td>
+                  <td colspan="9" class="text-center">No Data</td>
                 </tr>
               </tbody>
             </table>
@@ -294,7 +294,7 @@
         >
           <thead>
             <tr>
-              <th style="width: 5%">No</th>
+              <th style="width: 4%">No</th>
               <th style="width: 6%">Line</th>
               <th style="width: 5%">OP</th>
               <th style="width: 8%">Tool No</th>
@@ -304,7 +304,7 @@
               >
                 Process
               </th>
-              <th style="width: 5%">Std Ctr</th>
+              <th style="width: 8%">Std Ctr</th>
               <th style="width: 10%">Register Date</th>
               <th style="width: 10%">Register By</th>
               <th style="width: 8%">Std Check</th>
