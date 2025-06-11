@@ -1,7 +1,6 @@
 import axios from 'axios'
 
 import { SET_META } from './META.module'
-import { SET_TOOL } from './TOOLS.module'
 
 const API_URL = process.env.VUE_APP_API_URL
 
@@ -125,7 +124,7 @@ const actions = {
         },
       })
       commit(SET_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK, response.data.data.data)
-      // console.log('tools', response.data.data.data)
+      console.log('tools', response.data.data.data)
 
       commit(SET_META, response.data.data.meta)
       return response

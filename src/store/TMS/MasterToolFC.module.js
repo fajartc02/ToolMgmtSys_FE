@@ -38,6 +38,11 @@ const getters = {
 
 const mutations = {
   SET_MASTER_TOOL_FC(state, payload) {
+    if (!Array.isArray(payload)) {
+      // Kalau payload bukan array, anggap data kosong atau satuan, ubah jadi array atau langsung set tanpa map
+      state.MASTER_TOOL_FC_DATA = []
+      return
+    }
     state.MASTER_TOOL_FC_DATA = payload.map((tool) => {
       let lineNm = tool.line_nm
       if (lineNm === 'Cylinder Head') {
@@ -62,13 +67,30 @@ const mutations = {
 }
 
 const actions = {
-  async ACTION_GET_MASTER_TOOL_FC({ commit }, query) {
+  async ACTION_GET_MASTER_TOOL_FC({ commit }, payload) {
     try {
-      const response = await axios.get(`${API_URL}/master-tool/get`, {
-        params: query,
-      })
+      console.log('payload', payload)
+
+      console.log('payload', payload)
+
+      let config = {}
+
+      if (payload?.meta) {
+        // Kirim semua payload (karena hanya meta yang dikirim)
+        config.params = payload
+      } else {
+        // Kirim line_id, machine_id, tool_nm
+        config.params = { ...payload }
+      }
+
+      const response = await axios.get(`${API_URL}/master-tool/get`, config)
       commit(SET_MASTER_TOOL_FC, response.data.data.data)
-      commit(SET_META, response.data.data.meta)
+      // Commit ke store
+      if (response.data.data.meta) {
+        commit(SET_META, response.data.data.meta)
+      }
+      console.log('response.data', response.data)
+
       return response.data.data.data
     } catch (error) {
       console.error(error)

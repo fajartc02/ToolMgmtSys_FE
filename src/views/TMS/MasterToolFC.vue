@@ -286,6 +286,65 @@
       </div>
     </div>
 
+    <!-- filter search table -->
+    <div class="card mt-2">
+      <div class="card-header">
+        <h5>Filter</h5>
+      </div>
+      <div class="d-flex align-items-end gap-2 p-2">
+        <!-- select Line-->
+        <div style="width: 30%">
+          <label for="lineFilter" class="form-label" style="font-weight: bold">
+            Line</label
+          >
+          <v-select
+            id="lineFilter"
+            :options="GET_LINES"
+            v-model="lineFilter"
+            label="line_nm"
+            placeholder="Pilih Line..."
+            :append-to-body="true"
+            @update:modelValue="getMachines"
+          >
+          </v-select>
+        </div>
+        <!-- Select Mesin -->
+        <div style="width: 30%">
+          <label
+            for="machineFilter"
+            class="form-label"
+            style="font-weight: bold"
+            >Mesin</label
+          >
+          <v-select
+            id="machineFilter"
+            :options="GET_MACHINES_FOR_TOOL_CHANGE"
+            v-model="machineForFC"
+            label="machine_nm"
+            placeholder="Pilih mesin..."
+            :append-to-body="true"
+            @update:modelValue="handleMachineChange"
+          />
+        </div>
+
+        <!-- Select Tool No -->
+        <div style="width: 30%">
+          <label for="toolNoFilter" class="form-label" style="font-weight: bold"
+            >Tool No</label
+          >
+          <v-select
+            id="toolNoFilter"
+            :options="GET_TOOLS_NO_FOR_TOOL_CHANGE"
+            v-model="toolsForFC"
+            :getOptionLabel="formatToolLabelTool"
+            placeholder="Pilih Tool No..."
+            :append-to-body="true"
+            @update:modelValue="searchToolFC"
+          />
+        </div>
+      </div>
+    </div>
+
     <div class="card mt-2">
       <div class="card-body">
         <table
@@ -357,7 +416,7 @@
           </tbody>
         </table>
 
-        <div class="card-footer">
+        <div v-if="meta" class="card-footer">
           <div class="d-flex justify-content-between">
             <div>
               <label class="m-0">Show</label>
@@ -402,6 +461,12 @@ import { mapGetters } from 'vuex'
 import PaginationMaster from '@/components/TMS/Pagination/PaginationMaster.vue'
 import { GET_META } from '@/store/TMS/META.module'
 import { ACTION_GET_LINES, GET_LINES } from '@/store/TMS/LINES.module'
+import {
+  ACTION_GET_MACHINES_FOR_TOOL_CHANGE,
+  ACTION_GET_TOOLS_NO_FOR_TOOL_CHANGE,
+  GET_MACHINES_FOR_TOOL_CHANGE,
+  GET_TOOLS_NO_FOR_TOOL_CHANGE,
+} from '@/store/TMS/FirstCheck.module'
 
 export default {
   name: 'MasterToolFC',
@@ -425,10 +490,20 @@ export default {
       currentToolId: null, // Store tool_id when editing
       selectedTool: null,
       stdCheck: [],
+      lineFilter: null,
+      machineForFC: null,
+      toolsForFC: null,
     }
   },
   computed: {
-    ...mapGetters([GET_META, GET_MASTER_TOOL_FC, GET_LINES, GET_STD_F_CHECK]),
+    ...mapGetters([
+      GET_META,
+      GET_MASTER_TOOL_FC,
+      GET_LINES,
+      GET_STD_F_CHECK,
+      GET_MACHINES_FOR_TOOL_CHANGE,
+      GET_TOOLS_NO_FOR_TOOL_CHANGE,
+    ]),
     isSaveDisabled() {
       return this.stdCheck.some((measurement) => {
         // Jika measuring_portion kosong, tombol Save dinonaktifkan
@@ -458,6 +533,12 @@ export default {
     },
   },
   watch: {
+    'toolsForFC.tool_id'(newVal, oldVal) {
+      if (!newVal && oldVal) {
+        // Saat tool_id dihapus setelah sebelumnya ada, balikin data awal
+        this.$store.dispatch(ACTION_GET_MASTER_TOOL_FC, { meta: this.meta })
+      }
+    },
     GET_META: function () {
       this.meta = this.GET_META
     },
@@ -470,6 +551,61 @@ export default {
     this.$store.dispatch(ACTION_GET_LINES, { meta: this.meta })
   },
   methods: {
+    async searchToolFC() {
+      try {
+        const payload = {
+          line_id: this.lineFilter.line_id,
+          tool_id: this.toolsForFC.tool_id,
+        }
+        await this.$store.dispatch(ACTION_GET_MASTER_TOOL_FC, payload)
+      } catch (error) {
+        console.log(error)
+      }
+    },
+    async handleMachineChange() {
+      console.log('kepanggil')
+
+      try {
+        const opNo = this.machineForFC.op_no
+        console.log('Nilai op_no:', opNo)
+        const op_no = opNo.replace(/\D/g, '') // Hapus semua karakter non-angka
+        const payload = {
+          op_no: op_no,
+          location: this.lineFilter.line_nm,
+        }
+        console.log('Angka dari op_no:', op_no)
+        console.log('payload', payload)
+        let response = await this.$store.dispatch(
+          ACTION_GET_TOOLS_NO_FOR_TOOL_CHANGE,
+          payload,
+        )
+        if (response.status === 200) {
+          // console.log('response', this.GET_TOOLS_NO_FOR_TOOL_CHANGE)
+        }
+      } catch (error) {
+        console.error(error)
+      }
+    },
+    async getMachines() {
+      // console.log('kepanggil')
+
+      try {
+        const payload = { location: this.lineFilter.line_nm } // Menggunakan this.location
+        let response = await this.$store.dispatch(
+          ACTION_GET_MACHINES_FOR_TOOL_CHANGE,
+          payload,
+        )
+        if (response.status === 200) {
+          // console.log('response', this.GET_MACHINES_FOR_TOOL_CHANGE)
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    },
+    formatToolLabelTool(option) {
+      if (!option) return 'Tidak ada data' // Fallback jika option null atau undefined
+      return `${option.tool_no || 'N/A'} / ${option.tool_nm || 'N/A'}`
+    },
     handlePageChange(page) {
       this.meta.currentPage = page
       this.$store.dispatch(ACTION_GET_MASTER_TOOL_FC, { meta: this.meta })

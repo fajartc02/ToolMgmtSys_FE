@@ -831,6 +831,15 @@ export default {
     //   console.log('GET_FOCUS_INPUT', this.GET_FOCUS_INPUT)
     //   this.focusToggle(this.GET_FOCUS_INPUT)
     // },
+    'toolsForTc.tool_no'(newVal, oldVal) {
+      if (!newVal && oldVal) {
+        // Saat tool_no dihapus setelah sebelumnya ada, balikin data awal
+        this.$store.dispatch(ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK, {
+          location: this.location,
+          meta: this.meta,
+        })
+      }
+    },
     GET_FOCUS_INPUT() {
       this.focusToggle()
     },
@@ -1135,15 +1144,15 @@ export default {
     },
     getHistory(tool_history_id) {
       try {
-        // console.log('tool_history_id dalam getHistory()', tool_history_id)
+        console.log('tool_history_id dalam getHistory()', tool_history_id)
 
         // Filter history data berdasarkan tool_id
         this.historyForTool = this.historyFCheckData.filter(
           (history) => history.tool_history_id === tool_history_id,
         )
-        // console.log('this.historyFCheckData', this.historyFCheckData)
+        console.log('this.historyFCheckData', this.historyFCheckData)
 
-        // console.log('historyForTool', this.historyForTool)
+        console.log('historyForTool', this.historyForTool)
 
         if (this.historyForTool.length > 0) {
           // Proses data history yang sesuai dengan tool_id
