@@ -743,21 +743,41 @@ export default {
     ]),
     toolsWithStatus() {
       let tools = this.GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK
-
       const inputToolNo = this.toolsForTc?.tool_no?.trim()
+
       if (inputToolNo) {
         tools = tools.filter((tool) => {
           const toolNameNormalized = this.normalizeToolName(tool.tool_nm)
 
+          const machineOpRaw = tool.machine_nm?.match(/\(([^)]+)\)/)?.[1] || ''
+          const machineOpNo = machineOpRaw.replace(/[A-Za-z]+$/, '')
+
           const matchedTool = this.GET_TOOL_NO.find((t) => {
             const tNameNormalized = this.normalizeToolName(t.tool_nm)
-            return (
+            const toolNameMatch =
               tNameNormalized.includes(toolNameNormalized) ||
               toolNameNormalized.includes(tNameNormalized)
+            const opMatch = t.op_no == machineOpNo
+
+            // Log untuk debugging
+            console.log(
+              `[FILTER] Tool: ${tool.tool_nm} → ${toolNameNormalized}`,
             )
+            console.log(`Candidate: ${t.tool_nm} → ${tNameNormalized}`)
+            console.log(`OP match: ${t.op_no} == ${machineOpNo} → ${opMatch}`)
+            console.log(`Tool match: ${toolNameMatch}`)
+
+            return toolNameMatch && opMatch
           })
 
-          return matchedTool?.tool_no === inputToolNo
+          const isMatched = matchedTool?.tool_no === inputToolNo
+          if (!isMatched) {
+            console.warn(
+              `[NOT MATCHED] inputToolNo: ${inputToolNo} !== ${matchedTool?.tool_no}`,
+            )
+          }
+
+          return isMatched
         })
       }
 
@@ -767,13 +787,17 @@ export default {
         )
 
         const toolNameNormalized = this.normalizeToolName(tool.tool_nm)
+        const machineOpRaw = tool.machine_nm?.match(/\(([^)]+)\)/)?.[1] || ''
+        const machineOpNo = machineOpRaw.replace(/[A-Za-z]+$/, '')
 
         const matchedTool = this.GET_TOOL_NO.find((t) => {
           const tNameNormalized = this.normalizeToolName(t.tool_nm)
-          return (
+          const toolNameMatch =
             tNameNormalized.includes(toolNameNormalized) ||
             toolNameNormalized.includes(tNameNormalized)
-          )
+          const opMatch = t.op_no == machineOpNo
+
+          return toolNameMatch && opMatch
         })
 
         return {
@@ -922,8 +946,19 @@ export default {
       )
     },
     normalizeToolName(name) {
-      return name?.toLowerCase().replace(/[\s\-]/g, '')
+      if (!name) return ''
+
+      // Hilangkan semua spasi
+      const noSpaces = name.replace(/\s+/g, '').toUpperCase()
+
+      // Cocokkan pola seperti DSDW-06465 atau DSDW06465
+      const match = noSpaces.match(/^([A-Z]+)-?(\d{4,})/)
+      if (!match) return noSpaces // fallback jika tidak cocok, kembalikan string tanpa spasi
+
+      const [_, prefix, angka] = match
+      return `${prefix}-${angka}` // jaga 0 tetap ada
     },
+
     prepareEdit(tool) {
       this.editTool = tool
       this.selectedMachine = tool.machine_id
@@ -1266,8 +1301,10 @@ export default {
 
         // Buat payload dengan tool_no yang telah diformat
         const payload = {
+          tool_no: tool.tool_no,
           tool_nm: formattedToolNo,
           location: this.location,
+          machine_id: tool.machine_id,
         }
 
         let response = await this.$store.dispatch(
