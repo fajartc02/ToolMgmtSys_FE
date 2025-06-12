@@ -124,7 +124,6 @@ const actions = {
         },
       })
       commit(SET_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK, response.data.data.data)
-      console.log('tools', response.data.data.data)
 
       commit(SET_META, response.data.data.meta)
       return response
@@ -244,6 +243,8 @@ const actions = {
   },
   async ACTION_GET_TOOL_NO({ commit }, query) {
     try {
+      console.log('payload', query)
+
       const response = await axios.get(
         `${API_URL}/tools-by-location/get-tool-no`,
         {

@@ -1333,7 +1333,7 @@ export default {
       try {
         const pic_check = this.selectedTool.pic_check
         const tool_history_id = this.selectedTool.tool_history_id
-        const tool_no = this.selectedTool.tool_no
+        const tool_no = this.selectedTool.tool_nm
         const payload = this.stdFCheckData.flatMap((item) =>
           item.stdCheckValues.map((value, index) => ({
             tool_f_check_std_id: item.tool_f_check_std_id,
@@ -1355,6 +1355,7 @@ export default {
         )
         // Log payload untuk memverifikasi data
         // console.log('Payload yang akan dikirim:', payload)
+
         let response = await this.$store.dispatch(
           ACTION_ADD_H_TOOL_F_CHECK,
           payload,

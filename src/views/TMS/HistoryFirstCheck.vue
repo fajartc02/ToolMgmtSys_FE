@@ -81,29 +81,31 @@
           <thead>
             <tr>
               <th>No</th>
-              <th>Tool ID</th>
+              <th>Tool Name</th>
+              <th>Tool No</th>
+              <th>Mesin</th>
               <th>QR Tag</th>
               <th>First Check Date</th>
-              <th>Mesin</th>
               <th>PIC</th>
               <th>Data Quality</th>
             </tr>
           </thead>
           <tbody>
             <tr
-              v-for="Histories in GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK"
+              v-for="Histories in toolWithToolNo"
               :key="Histories.tool_history_id"
             >
               <td>{{ Histories.no }}</td>
+              <td>{{ Histories.tool_nm }}</td>
               <td>{{ Histories.tool_no }}</td>
+              <td>{{ Histories.machine_nm }}</td>
               <td>{{ Histories.tool_qr }}</td>
               <td>{{ Histories.created_dt }}</td>
-              <td>{{ Histories.machine_nm }}</td>
               <td>{{ Histories.pic_check }}</td>
               <td>
                 <button
                   class="btn btn-primary"
-                  @click="grafikFirstCheck(Histories.tool_no)"
+                  @click="grafikFirstCheck(Histories.tool_nm)"
                 >
                   <i class="fas fa-eye"></i>
                 </button>
@@ -150,7 +152,9 @@ import VueApexCharts from 'vue3-apexcharts'
 import { mapGetters } from 'vuex'
 import {
   ACTION_GET_TOOL_HYSTORY_BY_QR,
+  ACTION_GET_TOOL_NO,
   ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK,
+  GET_TOOL_NO,
   GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK,
 } from '@/store/TMS/FirstCheck.module'
 import FirstCheckGraph from '@/components/TMS/Graphs/FirstCheckGraph.vue'
@@ -194,7 +198,34 @@ export default {
       GET_META,
       GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK,
       GET_HISTORY_GRAPH_FIRST_CHECK,
+      GET_TOOL_NO,
     ]),
+    toolWithToolNo() {
+      let tools = this.GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK
+
+      const toolsWithToolNo = tools.map((tool) => {
+        const toolNameNormalized = this.normalizeToolName(tool.tool_nm)
+        const machineOpRaw = tool.machine_nm?.match(/\(([^)]+)\)/)?.[1] || ''
+        const machineOpNo = machineOpRaw.replace(/[A-Za-z]+$/, '')
+
+        const matchedTool = this.GET_TOOL_NO.find((t) => {
+          const tNameNormalized = this.normalizeToolName(t.tool_nm)
+          const toolNameMatch =
+            tNameNormalized.includes(toolNameNormalized) ||
+            toolNameNormalized.includes(tNameNormalized)
+          const opMatch = t.op_no == machineOpNo
+          return toolNameMatch && opMatch
+        })
+
+        return {
+          ...tool,
+          tool_no: matchedTool ? matchedTool.tool_no : null,
+        }
+      })
+
+      console.log('toolWithToolNo', toolsWithToolNo)
+      return toolsWithToolNo
+    },
   },
   watch: {
     GET_META: function () {
@@ -211,6 +242,8 @@ export default {
         location: newLocation,
         meta: this.meta,
       })
+      this.$store.dispatch(ACTION_GET_TOOL_NO, { location: newLocation })
+      console.log('data get tool_no', this.GET_TOOL_NO)
     },
     searchQr: {
       async handler() {
@@ -246,6 +279,19 @@ export default {
     document.removeEventListener('click', this.handleClickOutside)
   },
   methods: {
+    normalizeToolName(name) {
+      if (!name) return ''
+
+      // Hilangkan semua spasi
+      const noSpaces = name.replace(/\s+/g, '').toUpperCase()
+
+      // Cocokkan pola seperti DSDW-06465 atau DSDW06465
+      const match = noSpaces.match(/^([A-Z]+)-?(\d{4,})/)
+      if (!match) return noSpaces // fallback jika tidak cocok, kembalikan string tanpa spasi
+
+      const [_, prefix, angka] = match
+      return `${prefix}-${angka}` // jaga 0 tetap ada
+    },
     handlePageChange(page) {
       this.meta.currentPage = page
       this.$store
