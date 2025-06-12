@@ -147,6 +147,7 @@
             Tool Change
           </button> -->
           <button
+            v-if="isToolChangeAllowed"
             class="btn btn-info"
             @click="showModal('toolChangeModal')"
             :disabled="GET_TOOL_DETAILS?.is_scrab || !GET_TOOL_DETAILS"
@@ -225,6 +226,7 @@ import { mapGetters } from 'vuex'
 import {
   ACTION_TOOL_DETAILS,
   ACTION_UPDATE_TOOL_POS,
+  GET_TOOL,
   GET_TOOL_DETAILS,
 } from '@/store/TMS/TOOLS.module'
 
@@ -242,6 +244,15 @@ export default {
   },
   computed: {
     ...mapGetters([GET_TOOL_DETAILS]),
+    isToolChangeAllowed() {
+      const pos = this.GET_TOOL_DETAILS?.position || ''
+      return (
+        pos !== 'In Machine Cylinder Head' &&
+        pos !== 'In Machine Cylinder Block' &&
+        pos !== 'In Machine Crank Shaft' &&
+        pos !== 'In Machine Cam Shaft'
+      )
+    },
   },
   methods: {
     dismissModal(keyModal) {

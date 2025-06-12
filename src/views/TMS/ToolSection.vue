@@ -443,6 +443,8 @@
       :meta="meta"
     />
     <PleaseScanQRTools v-else />
+
+    <!--card tool chnage tanpa QR CODE-->
     <div
       v-if="
         [
@@ -524,7 +526,7 @@
       </div>
     </div>
 
-    <!-- Tabel Data Tools -->
+    <!-- Tabel Data Tools untuk first cek -->
     <div
       v-if="
         [
