@@ -759,6 +759,7 @@ export default {
     async saveSTDFirstCheck() {
       try {
         const payload = this.stdCheck.map((measurement) => ({
+          tool_f_check_std_id: measurement.tool_f_check_std_id,
           tool_id: this.selectedTool.tool_id,
           measuring_portion: measurement.measuring_portion,
           gauge: measurement.gauge,
