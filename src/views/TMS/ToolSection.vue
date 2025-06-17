@@ -776,9 +776,12 @@ export default {
       }
 
       return tools.map((tool) => {
-        const isFound = this.historyFCheckData.some(
-          (history) => history.tool_history_id === tool.tool_history_id,
-        )
+        const isFound = this.historyFCheckData.some((history) => {
+          return (
+            history.tool_history_id === tool.tool_history_id ||
+            history.tool_history_no_qr_id === tool.tool_history_id
+          )
+        })
 
         const toolNameNormalized = this.normalizeToolName(tool.tool_nm)
         const machineOpRaw = tool.machine_nm?.match(/\(([^)]+)\)/)?.[1] || ''
@@ -1149,32 +1152,38 @@ export default {
       return '' // Default tanpa styling tambahan
     },
     getStatus(tool_history_id) {
-      // Ambil semua data yang memiliki tool_history_id yang sesuai
-      const relevantData = this.historyFCheckData.filter(
-        (data) => data.tool_history_id === tool_history_id,
-      )
+      // Ambil semua data yang memiliki tool_history_id ATAU tool_history_no_qr_id yang sesuai
+      const relevantData = this.historyFCheckData.filter((data) => {
+        return (
+          data.tool_history_id === tool_history_id ||
+          data.tool_history_no_qr_id === tool_history_id
+        )
+      })
 
       // Jika tidak ada data yang cocok, kembalikan status default
       if (relevantData.length === 0) {
         return '-' // Atau gunakan nilai default lain
       }
 
-      // Periksa status dari data yang relevan
+      // Ambil status dari data yang cocok
       const statuses = relevantData.map((data) => data.status)
 
-      // Jika ada status NG, kembalikan NG, jika tidak OK
+      // Jika ada NG, kembalikan NG. Jika tidak, kembalikan OK
       return statuses.includes('NG') ? 'NG' : 'OK'
     },
+
     getHistory(tool_history_id) {
       try {
         console.log('tool_history_id dalam getHistory()', tool_history_id)
 
         // Filter history data berdasarkan tool_id
-        this.historyForTool = this.historyFCheckData.filter(
-          (history) => history.tool_history_id === tool_history_id,
-        )
+        this.historyForTool = this.historyFCheckData.filter((history) => {
+          return (
+            history.tool_history_id === tool_history_id ||
+            history.tool_history_no_qr_id === tool_history_id
+          )
+        })
         console.log('this.historyFCheckData', this.historyFCheckData)
-
         console.log('historyForTool', this.historyForTool)
 
         if (this.historyForTool.length > 0) {
@@ -1212,15 +1221,7 @@ export default {
         console.log('Error in getFCheck:', error)
       }
     },
-    isToolInHistory(tool_history_id) {
-      const exists = this.historyFCheckData.some(
-        (history) => history.tool_history_id === tool_history_id,
-      )
-      // console.log(
-      //   `[DEBUG] Checking tool_history_id: ${tool_history_id}, Exists in history: ${exists}`,
-      // )
-      return exists
-    },
+
     formatDate(date) {
       const optionsDate = { day: '2-digit', month: '2-digit', year: 'numeric' }
       const optionsTime = {
@@ -1322,6 +1323,7 @@ export default {
         const tool_no = this.selectedTool.tool_nm
         const payload = this.stdFCheckData.flatMap((item) =>
           item.stdCheckValues.map((value, index) => ({
+            tool_qr: this.selectedTool.tool_qr,
             tool_f_check_std_id: item.tool_f_check_std_id,
             tool_id: item.tool_id,
             tool_no: tool_no,
@@ -1341,7 +1343,7 @@ export default {
         )
         // Log payload untuk memverifikasi data
         // console.log('Payload yang akan dikirim:', payload)
-
+        // return
         let response = await this.$store.dispatch(
           ACTION_ADD_H_TOOL_F_CHECK,
           payload,
