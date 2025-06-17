@@ -62,14 +62,42 @@
           </div>
         </div>
 
-        <div class="card p-2 mb-2">
-          <div class="d-flex justify-content-between align-items-center">
-            <h4 class="text-center m-0"></h4>
-            <input
-              type="text"
-              v-model="searchQr"
-              class="form-control select-sm"
-              placeholder="Search QR Tag"
+        <div class="d-flex align-items-end gap-2 p-2">
+          <!-- Select Mesin -->
+          <div style="width: 50%">
+            <label
+              for="machineFilter"
+              class="form-label"
+              style="font-weight: bold"
+              >Mesin</label
+            >
+            <v-select
+              id="machineFilter"
+              :options="GET_MACHINES_FOR_TOOL_CHANGE"
+              v-model="machineHistory"
+              label="machine_nm"
+              @update:modelValue="handleMachineFCHistory"
+              placeholder="Pilih mesin..."
+              :append-to-body="true"
+            />
+          </div>
+
+          <!-- Select Tool No -->
+          <div style="width: 50%">
+            <label
+              for="toolNoFilter"
+              class="form-label"
+              style="font-weight: bold"
+              >Tool No</label
+            >
+            <v-select
+              id="toolNoFilter"
+              :options="GET_TOOLS_NO_FOR_TOOL_CHANGE"
+              v-model="toolHistory"
+              :getOptionLabel="formatToolLabelTool"
+              @update:modelValue="searchToolHistory"
+              placeholder="Pilih Tool No..."
+              :append-to-body="true"
             />
           </div>
         </div>
@@ -90,7 +118,7 @@
               <th>Data Quality</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody v-if="toolWithToolNo.length > 0">
             <tr
               v-for="Histories in toolWithToolNo"
               :key="Histories.tool_history_id"
@@ -110,6 +138,11 @@
                   <i class="fas fa-eye"></i>
                 </button>
               </td>
+            </tr>
+          </tbody>
+          <tbody v-else>
+            <tr>
+              <td colspan="8">Tidak ada data</td>
             </tr>
           </tbody>
         </table>
@@ -151,11 +184,15 @@ import { GET_META } from '@/store/TMS/META.module'
 import VueApexCharts from 'vue3-apexcharts'
 import { mapGetters } from 'vuex'
 import {
+  ACTION_GET_MACHINES_FOR_TOOL_CHANGE,
   ACTION_GET_TOOL_HYSTORY_BY_QR,
   ACTION_GET_TOOL_NO,
   ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK,
+  ACTION_GET_TOOLS_NO_FOR_TOOL_CHANGE,
+  GET_MACHINES_FOR_TOOL_CHANGE,
   GET_TOOL_NO,
   GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK,
+  GET_TOOLS_NO_FOR_TOOL_CHANGE,
 } from '@/store/TMS/FirstCheck.module'
 import FirstCheckGraph from '@/components/TMS/Graphs/FirstCheckGraph.vue'
 import {
@@ -191,6 +228,8 @@ export default {
         'Cylinder Block',
       ],
       location: 'Cylinder Head',
+      machineHistory: null,
+      toolHistory: null,
     }
   },
   computed: {
@@ -199,11 +238,41 @@ export default {
       GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK,
       GET_HISTORY_GRAPH_FIRST_CHECK,
       GET_TOOL_NO,
+      GET_MACHINES_FOR_TOOL_CHANGE,
+      GET_TOOLS_NO_FOR_TOOL_CHANGE,
     ]),
     toolWithToolNo() {
       let tools = this.GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK
+      const inputToolNo = this.toolHistory?.tool_no?.trim()
 
-      const toolsWithToolNo = tools.map((tool) => {
+      if (inputToolNo) {
+        tools = tools.filter((tool) => {
+          const toolNameNormalized = this.normalizeToolName(tool.tool_nm)
+          const machineOpRaw = tool.machine_nm?.match(/\(([^)]+)\)/)?.[1] || ''
+          const machineOpNo = machineOpRaw.replace(/[A-Za-z]+$/, '')
+
+          const matchedTool = this.GET_TOOL_NO.find((t) => {
+            const tNameNormalized = this.normalizeToolName(t.tool_nm)
+            const toolNameMatch =
+              tNameNormalized.includes(toolNameNormalized) ||
+              toolNameNormalized.includes(tNameNormalized)
+            const opMatch = t.op_no == machineOpNo
+
+            return toolNameMatch && opMatch
+          })
+
+          const isMatched = matchedTool?.tool_no === inputToolNo
+          if (!isMatched) {
+            console.warn(
+              `[NOT MATCHED] inputToolNo: ${inputToolNo} !== ${matchedTool?.tool_no}`,
+            )
+          }
+
+          return isMatched
+        })
+      }
+
+      return tools.map((tool) => {
         const toolNameNormalized = this.normalizeToolName(tool.tool_nm)
         const machineOpRaw = tool.machine_nm?.match(/\(([^)]+)\)/)?.[1] || ''
         const machineOpNo = machineOpRaw.replace(/[A-Za-z]+$/, '')
@@ -214,6 +283,7 @@ export default {
             tNameNormalized.includes(toolNameNormalized) ||
             toolNameNormalized.includes(tNameNormalized)
           const opMatch = t.op_no == machineOpNo
+
           return toolNameMatch && opMatch
         })
 
@@ -222,12 +292,18 @@ export default {
           tool_no: matchedTool ? matchedTool.tool_no : null,
         }
       })
-
-      console.log('toolWithToolNo', toolsWithToolNo)
-      return toolsWithToolNo
     },
   },
   watch: {
+    'toolHistory.tool_no'(newVal, oldVal) {
+      if (!newVal && oldVal) {
+        // Saat tool_no dihapus setelah sebelumnya ada, balikin data awal
+        this.$store.dispatch(ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK, {
+          location: this.location,
+          meta: this.meta,
+        })
+      }
+    },
     GET_META: function () {
       this.meta = this.GET_META
     },
@@ -243,25 +319,7 @@ export default {
         meta: this.meta,
       })
       this.$store.dispatch(ACTION_GET_TOOL_NO, { location: newLocation })
-      console.log('data get tool_no', this.GET_TOOL_NO)
-    },
-    searchQr: {
-      async handler() {
-        if (this.searchQr.length === 5) {
-          await this.$store.dispatch(
-            ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK,
-            {
-              meta: this.meta,
-              location: this.location,
-              tool_qr: this.searchQr,
-            },
-          )
-        }
-        if (this.searchQr.length >= 10) {
-          this.searchQr = this.searchQr.slice(5, 11)
-        }
-      },
-      deep: true,
+      this.getMachines()
     },
   },
   mounted() {
@@ -271,14 +329,77 @@ export default {
         meta: this.meta,
       })
       .then(() => {
-        console.log('data tools', this.GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK)
+        this.$store.dispatch(ACTION_GET_TOOL_NO, { location: this.location })
       })
+    this.getMachines()
     document.addEventListener('click', this.handleClickOutside)
   },
   beforeDestroy() {
     document.removeEventListener('click', this.handleClickOutside)
   },
   methods: {
+    async searchToolHistory() {
+      const tool_no = this.toolHistory?.tool_no
+      console.log('tool_no', tool_no)
+
+      const payload = {
+        location: this.location,
+        machine_id: this.machineHistory.machine_id,
+        meta: this.meta,
+      }
+      await this.$store.dispatch(
+        ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK,
+        payload,
+      )
+    },
+    formatToolLabelTool(option) {
+      if (!option) return 'Tidak ada data' // Fallback jika option null atau undefined
+      return `${option.tool_no || 'N/A'} / ${option.tool_nm || 'N/A'}`
+    },
+    async handleMachineFCHistory() {
+      console.log('kepanggil')
+
+      try {
+        const opNo = this.machineHistory.op_no
+        console.log('Nilai op_no:', opNo)
+        const op_no = opNo.replace(/\D/g, '') // Hapus semua karakter non-angka
+        const payload = {
+          op_no: op_no,
+          location: this.location,
+        }
+        console.log('Angka dari op_no:', op_no) // Output misalnya: "50"
+
+        let response = await this.$store.dispatch(
+          ACTION_GET_TOOLS_NO_FOR_TOOL_CHANGE,
+          payload,
+        )
+        if (response.status === 200) {
+          if (this.GET_TOOLS_NO_FOR_TOOL_CHANGE.length === 0) {
+            this.GET_TOOLS_NO_FOR_TOOL_CHANGE = []
+          }
+        }
+      } catch (error) {
+        console.error(error)
+      }
+    },
+    async getMachines() {
+      // console.log('kepanggil')
+
+      try {
+        const payload = { location: this.location } // Menggunakan this.location
+        // console.log('payload', payload)
+
+        let response = await this.$store.dispatch(
+          ACTION_GET_MACHINES_FOR_TOOL_CHANGE,
+          payload,
+        )
+        if (response.status === 200) {
+          // console.log('response', this.GET_MACHINES_FOR_TOOL_CHANGE)
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    },
     normalizeToolName(name) {
       if (!name) return ''
 

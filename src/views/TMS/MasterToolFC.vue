@@ -736,7 +736,7 @@ export default {
     },
     async deleteRow(index) {
       const measurement = this.stdCheck[index]
-      console.log('measurement', measurement)
+      // console.log('measurement', measurement)
 
       // Cek apakah tool_type_std_id ada
       if (!measurement.tool_f_check_std_id) {

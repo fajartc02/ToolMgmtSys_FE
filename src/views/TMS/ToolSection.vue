@@ -761,14 +761,6 @@ export default {
               toolNameNormalized.includes(tNameNormalized)
             const opMatch = t.op_no == machineOpNo
 
-            // Log untuk debugging
-            console.log(
-              `[FILTER] Tool: ${tool.tool_nm} → ${toolNameNormalized}`,
-            )
-            console.log(`Candidate: ${t.tool_nm} → ${tNameNormalized}`)
-            console.log(`OP match: ${t.op_no} == ${machineOpNo} → ${opMatch}`)
-            console.log(`Tool match: ${toolNameMatch}`)
-
             return toolNameMatch && opMatch
           })
 
@@ -930,12 +922,6 @@ export default {
     async searchTool() {
       const tool_no = this.toolsForTc?.tool_no
       console.log('tool_no', tool_no)
-
-      if (!tool_no) {
-        // Kosongkan hasil filter kalau tool_no kosong
-        this.filteredTools = null
-        return
-      }
 
       const payload = {
         location: this.location,
