@@ -195,7 +195,7 @@ export default {
                 },
                 {
                   component: 'CNavItem',
-                  name: 'Master Tool No QR Code',
+                  name: 'Master Std First Check',
                   to: '/tool/master/first-check',
                   // icon: 'cilMap',
                   parentId: 'ROOT',

@@ -41,7 +41,7 @@ const actions = {
         params: query,
       })
       commit(SET_TOOL_USED_BY_MACHINE_ID, response.data.data)
-      console.log('ini', response.data.data)
+      // console.log('ini', response.data.data)
 
       return response
     } catch (error) {

@@ -99,6 +99,7 @@ const actions = {
         params: query,
       })
       commit(SET_TOOL_DETAILS, response.data.data ? response.data.data : null)
+      return response
     } catch (error) {
       console.error(error)
       return error
@@ -153,7 +154,7 @@ const actions = {
   async ACTION_ADD_TOOL_HISTORY({ commit }, payload) {
     try {
       const response = await axios.post(`${API_URL}/tools/history`, payload)
-      console.log(response)
+      return response
     } catch (error) {
       console.error(error)
       return error

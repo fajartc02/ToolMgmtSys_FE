@@ -42,6 +42,11 @@ export const ACTION_GET_TOOL_NO = 'ACTION_GET_TOOL_NO'
 export const GET_TOOL_NO = 'GET_TOOL_NO'
 export const SET_TOOL_NO = 'SET_TOOL_NO'
 
+export const ACTION_GET_TOOL_USED_BY_LOCATION =
+  'ACTION_GET_TOOL_USED_BY_LOCATION'
+export const GET_TOOL_USED_BY_LOCATION = 'GET_TOOL_USED_BY_LOCATION'
+export const SET_TOOL_USED_BY_LOCATION = 'SET_TOOL_USED_BY_LOCATION'
+
 const state = {
   TOOLS_BY_LOCATION_FOR_FIRST_CHECK: [],
   STD_TOOL_F_CHECK: [],
@@ -49,6 +54,7 @@ const state = {
   MACHINES_FOR_TOOL_CHANGE: [],
   TOOLS_NO_FOR_TOOL_CHANGE: [],
   DATA_TOOLS_NO: [],
+  TOOLS_USED_BY_LOCATION: [],
 }
 
 const getters = {
@@ -69,6 +75,9 @@ const getters = {
   },
   GET_TOOL_NO(state) {
     return state.DATA_TOOLS_NO
+  },
+  GET_TOOL_USED_BY_LOCATION(state) {
+    return state.TOOLS_USED_BY_LOCATION
   },
 }
 
@@ -110,6 +119,9 @@ const mutations = {
   SET_TOOL_NO(state, payload) {
     state.DATA_TOOLS_NO = payload
   },
+  SET_TOOL_USED_BY_LOCATION(state, payload) {
+    state.TOOLS_USED_BY_LOCATION = payload
+  },
 }
 
 const actions = {
@@ -126,9 +138,31 @@ const actions = {
       commit(SET_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK, response.data.data.data)
 
       commit(SET_META, response.data.data.meta)
+
       return response
     } catch (error) {
       console.error('Error fetching tools:', error)
+    }
+  },
+  async ACTION_GET_TOOL_USED_BY_LOCATION({ commit }, query) {
+    try {
+      const response = await axios.get(
+        `${API_URL}/tools-by-location/get-tool-used-by-location`,
+        {
+          params: {
+            location: query.location,
+            meta: query.meta,
+            tool_qr: query.tool_qr,
+            machine_id: query.machine_id,
+          },
+        },
+      )
+      commit(SET_TOOL_USED_BY_LOCATION, response.data.data.data)
+      commit(SET_META, response.data.data.meta)
+      return response
+    } catch (error) {
+      console.error(error)
+      return { status: error.response ? error.response.status : 500 }
     }
   },
   async ACTION_GET_STD_TOOL_F_CHECK({ commit }, query) {
@@ -243,8 +277,6 @@ const actions = {
   },
   async ACTION_GET_TOOL_NO({ commit }, query) {
     try {
-      console.log('payload', query)
-
       const response = await axios.get(
         `${API_URL}/tools-by-location/get-tool-no`,
         {

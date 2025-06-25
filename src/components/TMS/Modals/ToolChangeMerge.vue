@@ -116,7 +116,10 @@ import MOCK_MACHINES_TREESELECT from '@/mock/MACHINES_TREESELECT.mock'
 import { ACTION_SYSTEM, GET_SYSTEM_OPTS } from '@/store/TMS/SYSTEM.module'
 import MOCK_TOOL_NOTES_TREESELECT from '@/mock/NOTES_TOOL_TREESELECT.mock'
 import MOCK_USERS_TREESELECT from '@/mock/USERS_TREESELECT.mock'
-import { ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK } from '@/store/TMS/FirstCheck.module'
+import {
+  ACTION_GET_TOOL_USED_BY_LOCATION,
+  ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK,
+} from '@/store/TMS/FirstCheck.module'
 import {
   ACTION_MACHINES_OPTS,
   GET_MACHINES_TREESELECT,
@@ -250,7 +253,7 @@ export default {
         )
 
         if (response.status === 200) {
-          console.log('action by machineId', this.GET_TOOL_USED_BY_MACHINE_ID)
+          // console.log('action by machineId', this.GET_TOOL_USED_BY_MACHINE_ID)
           if (this.GET_TOOL_USED_BY_MACHINE_ID.length == 0) {
             this.tool_used_id = null
             this.tool_in_used = 'Tool Tidak Ditemukan'
@@ -358,6 +361,10 @@ export default {
           },
         )
         await this.submitCheckUsed()
+        await this.$store.dispatch(ACTION_GET_TOOL_USED_BY_LOCATION, {
+          meta: this.meta,
+          location: this.location,
+        })
 
         this.$emit('modal-show', false)
         this.$swal.hideLoading()

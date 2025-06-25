@@ -295,7 +295,7 @@
     </div>
   </div>
 
-  <div class="modal" tabindex="-1" id="modalToolChange">
+  <!-- <div class="modal" tabindex="-1" id="modalToolChange">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
@@ -308,7 +308,7 @@
           ></button>
         </div>
         <div class="modal-body">
-          <!-- Input Filter Mesin -->
+         
           <div class="mb-3">
             <label for="machineFilter" class="form-label">Mesin</label>
             <v-select
@@ -321,7 +321,7 @@
             />
           </div>
 
-          <!-- Input Filter Tool No -->
+          
           <div class="mb-3">
             <label for="toolNoFilter" class="form-label">Tool No</label>
             <v-select
@@ -345,7 +345,7 @@
               <span class="input-group-text">{{ std_ctr }}</span>
             </div>
           </div>
-          <!-- Input Problem -->
+         
           <div
             v-if="act_ctr < std_ctr && modalTitle === 'Tool Bekas'"
             class="mb-3"
@@ -359,7 +359,134 @@
               placeholder="Describe the problem"
             />
           </div>
-          <!-- Input Filter PIC -->
+         
+          <div class="mb-3">
+            <label for="operatorFilter" class="form-label">PIC</label>
+            <v-select
+              id="operatorFilter"
+              :options="GET_USERS_TREESELECT"
+              v-model="picTc"
+              label="label"
+              placeholder="Pilih PIC..."
+            />
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+            @click="resetModal"
+          >
+            Close
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            data-bs-dismiss="modal"
+            @click="submitToolChange"
+            :disabled="!isModalValid"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  </div> -->
+
+  <div class="modal" tabindex="-1" id="modalToolChange">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Tool Change</h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            @click="resetModal"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <!-- Input Mesin -->
+          <div class="mb-3">
+            <label for="machineFilter" class="form-label">Mesin</label>
+            <v-select
+              id="machineFilter"
+              :options="GET_MACHINES_FOR_TOOL_CHANGE"
+              v-model="machinesForTc"
+              label="machine_nm"
+              @update:modelValue="
+                (val) => {
+                  handleMachineChange(val)
+                  setelahPilihMesin(val)
+                }
+              "
+              placeholder="Pilih mesin..."
+            />
+          </div>
+
+          <!-- Input Tool No -->
+          <div class="mb-3">
+            <label for="toolNoFilter" class="form-label">Tool No</label>
+            <v-select
+              id="toolNoFilter"
+              :options="GET_TOOLS_NO_FOR_TOOL_CHANGE"
+              v-model="toolsForTc"
+              :getOptionLabel="formatToolLabelTool"
+              @update:modelValue="handleToolChange"
+              placeholder="Pilih Tool No..."
+            />
+          </div>
+
+          <!-- STD Counter (readonly) -->
+          <div class="mb-3">
+            <label class="form-label">STD Counter</label>
+            <input
+              type="number"
+              class="form-control"
+              :value="std_ctr"
+              readonly
+            />
+          </div>
+
+          <!-- Tool IN USED -->
+          <div class="mb-3">
+            <label class="form-label">Tool IN USED</label>
+            <div class="input-group">
+              <input
+                type="text"
+                class="form-control"
+                v-model="tool_used"
+                readonly
+              />
+              <span class="input-group-text">{{ qr_tool_used }}</span>
+            </div>
+          </div>
+
+          <!-- ACT Counter -->
+          <div class="mb-3">
+            <label class="form-label">ACT Counter</label>
+            <input
+              v-model.number="act_ctr"
+              type="number"
+              class="form-control"
+              placeholder="Masukkan nilai Act"
+            />
+          </div>
+
+          <!-- Problem -->
+          <div class="mb-3" v-if="act_ctr < std_ctr">
+            <label class="form-label">Problem</label>
+            <input
+              v-model="problemDescription"
+              type="text"
+              class="form-control"
+              placeholder="Jelaskan masalahnya"
+            />
+          </div>
+
+          <!-- PIC -->
           <div class="mb-3">
             <label for="operatorFilter" class="form-label">PIC</label>
             <v-select
@@ -444,84 +571,88 @@
     />
     <PleaseScanQRTools v-else />
 
-    <!--card tool chnage tanpa QR CODE-->
-    <div
-      v-if="
-        [
-          'Cylinder Head',
-          'Cylinder Block',
-          'Crank Shaft',
-          'Cam Shaft',
-        ].includes(location)
-      "
-      class="card mt-2"
-    >
-      <div class="card-header">
-        <h5>Tool Change Tool No QR</h5>
-      </div>
-      <div class="card-body">
-        <button
-          class="btn btn-info me-2"
-          data-bs-toggle="modal"
-          data-bs-target="#modalToolChange"
-          @click="openModal('new')"
-        >
-          Tool Change (Tool Baru)
-        </button>
-
-        <button
-          class="btn btn-secondary"
-          data-bs-toggle="modal"
-          data-bs-target="#modalToolChange"
-          @click="openModal('old')"
-        >
-          Tool Change (Tool Bekas)
-        </button>
-      </div>
-    </div>
-
     <!-- filter search table -->
     <div
       v-if="this.location != 'Tool Regrinding' && this.location != 'Clean Room'"
       class="card mt-2"
     >
-      <div class="card-header">
-        <h5>Filter</h5>
-      </div>
-      <div class="d-flex align-items-end gap-2 p-2">
-        <!-- Select Mesin -->
-        <div style="width: 50%">
-          <label
-            for="machineFilter"
-            class="form-label"
-            style="font-weight: bold"
-            >Mesin</label
+      <!--card tool chnage tanpa QR CODE-->
+      <div class="mt-2 mb-2">
+        <div class="card-header">
+          <h5>Tool Change Tool Without QR</h5>
+        </div>
+        <div class="card-body">
+          <button
+            class="btn btn-info me-2"
+            data-bs-toggle="modal"
+            data-bs-target="#modalToolChange"
           >
-          <v-select
-            id="machineFilter"
-            :options="GET_MACHINES_FOR_TOOL_CHANGE"
-            v-model="machinesForTc"
-            label="machine_nm"
-            @update:modelValue="handleMachineChange"
-            placeholder="Pilih mesin..."
-            :append-to-body="true"
-          />
+            Tool Change
+          </button>
+        </div>
+      </div>
+
+      <div class="card-header">
+        <h5>Filter Search Data Tool Change</h5>
+      </div>
+      <!-- Row: 2 Dropdown + 2 Tombol -->
+      <div class="row align-items-start p-2">
+        <!-- Filter Tool -->
+        <div class="col-md-6">
+          <h5 class="fw-bold mb-3">Filter Tool</h5>
+          <div class="row">
+            <div class="col-md-6">
+              <v-select
+                id="machineFilter"
+                :options="GET_MACHINES_FOR_TOOL_CHANGE"
+                v-model="machinesForTc"
+                label="machine_nm"
+                @update:modelValue="handleMachineChange"
+                placeholder="Pilih mesin..."
+                :append-to-body="true"
+                class="w-100"
+              />
+            </div>
+            <div class="col-md-6">
+              <v-select
+                id="toolNoFilter"
+                :options="GET_TOOLS_NO_FOR_TOOL_CHANGE"
+                v-model="toolsForTc"
+                :getOptionLabel="formatToolLabelTool"
+                @update:modelValue="searchTool"
+                placeholder="Pilih Tool No..."
+                :append-to-body="true"
+                class="w-100"
+              />
+            </div>
+          </div>
         </div>
 
-        <!-- Select Tool No -->
-        <div style="width: 50%">
-          <label for="toolNoFilter" class="form-label" style="font-weight: bold"
-            >Tool No</label
-          >
-          <v-select
-            id="toolNoFilter"
-            :options="GET_TOOLS_NO_FOR_TOOL_CHANGE"
-            v-model="toolsForTc"
-            :getOptionLabel="formatToolLabelTool"
-            @update:modelValue="searchTool"
-            placeholder="Pilih Tool No..."
-            :append-to-body="true"
-          />
+        <!-- Filter Table -->
+        <div
+          class="col-md-6 d-flex flex-column justify-content-between h-100 border-start ps-4"
+        >
+          <h5 class="fw-bold mb-3">Filter Table</h5>
+          <div class="row h-100">
+            <div class="col-md-6 d-flex align-items-start">
+              <button
+                class="btn btn-danger w-100"
+                :class="{ active: activeTable === 'firstCheck' }"
+                @click="activeTable = 'firstCheck'"
+              >
+                First Check
+              </button>
+            </div>
+            <div class="col-md-6 d-flex align-items-start">
+              <button
+                class="btn btn-danger w-100"
+                :class="{ active: activeTable === 'toolUsed' }"
+                @click="activeTable = 'toolUsed'"
+              >
+                Tool Used
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -538,41 +669,44 @@
       "
       class="card mt-2"
     >
-      <div class="card-header">
-        <h5>List Tools Line {{ location }}</h5>
-      </div>
-      <div class="card-body">
-        <table class="table table-hover text-center table-bordered">
-          <thead>
-            <tr>
-              <th scope="col">No</th>
-              <th scope="col">Tanggal</th>
-              <th scope="col">PIC</th>
-              <th scope="col">Tool</th>
-              <th>Tool No</th>
-              <th scope="col">QR Code</th>
-              <th scope="col">Mesin</th>
-              <th scope="col">Check</th>
-              <th scope="col">View</th>
-              <th scope="col">Status</th>
-            </tr>
-          </thead>
-          <tbody v-if="toolsWithStatus.length > 0">
-            <tr
-              v-for="tool in toolsWithStatus"
-              :key="tool.tool_history_id"
-              :class="{ 'row-red': !tool.isFound }"
-            >
-              <td>{{ tool.no }}</td>
-              <td>{{ tool.created_dt }}</td>
-              <td>{{ tool.pic_check }}</td>
-              <td>{{ tool.tool_nm }}</td>
-              <td>{{ tool.tool_no }}</td>
-              <td>{{ tool.tool_qr }}</td>
-              <td>
-                <div>
-                  <div>{{ tool.machine_nm }}</div>
-                  <!-- <button
+      <div v-if="activeTable === 'firstCheck'">
+        <div class="card-header">
+          <h5>First Check {{ location }}</h5>
+        </div>
+        <div class="card-body">
+          <table class="table table-hover text-center table-bordered">
+            <thead>
+              <tr>
+                <th scope="col">No</th>
+                <th scope="col">Tanggal</th>
+                <th scope="col">PIC</th>
+                <th scope="col">Tool</th>
+                <th>Tool No</th>
+                <th scope="col">QR Code</th>
+                <th scope="col">Mesin</th>
+                <th scope="col">Check</th>
+                <th scope="col">View</th>
+                <th scope="col">Status</th>
+              </tr>
+            </thead>
+            <tbody v-if="toolsWithStatus.length > 0">
+              <tr
+                v-for="(tool, index) in toolsWithStatus"
+                :key="tool.tool_history_id"
+                :class="{ 'row-red': !tool.isFound }"
+              >
+                <td>
+                  {{ meta.itemsPerPage * (meta.currentPage - 1) + index + 1 }}
+                </td>
+                <td>{{ tool.created_dt }}</td>
+                <td>{{ tool.pic_check }}</td>
+                <td>{{ tool.tool_nm }}</td>
+                <td>{{ tool.tool_no }}</td>
+                <td>{{ tool.tool_qr }}</td>
+                <td>
+                  <div>
+                    <div>{{ tool.machine_nm }}</div>
+                    <!-- <button
                     data-bs-toggle="modal"
                     data-bs-target="#modalEditMesin"
                     class="btn btn-primary btn-sm mt-1"
@@ -580,40 +714,87 @@
                   >
                     <i class="fas fa-edit"></i>
                   </button> -->
-                </div>
-              </td>
-              <td>
-                <button
-                  class="btn btn-primary"
-                  data-bs-toggle="modal"
-                  data-bs-target="#modalStdFCheck"
-                  @click="stdFCheck(tool)"
-                >
-                  <i class="fas fa-edit"></i>
-                </button>
-              </td>
-              <td>
-                <button
-                  class="btn btn-primary"
-                  data-bs-toggle="modal"
-                  data-bs-target="#modalHistoryFCheck"
-                  @click="getHistory(tool.tool_history_id)"
-                >
-                  <i class="fas fa-eye"></i>
-                </button>
-              </td>
-              <td :class="getStatusClass(tool.tool_history_id)">
-                <strong>{{ getStatus(tool.tool_history_id) }}</strong>
-              </td>
-            </tr>
-          </tbody>
-          <tbody v-else>
-            <tr>
-              <td colspan="10">Tidak ada data</td>
-            </tr>
-          </tbody>
-        </table>
+                  </div>
+                </td>
+                <td>
+                  <button
+                    class="btn btn-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalStdFCheck"
+                    @click="stdFCheck(tool)"
+                  >
+                    <i class="fas fa-edit"></i>
+                  </button>
+                </td>
+                <td>
+                  <button
+                    class="btn btn-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalHistoryFCheck"
+                    @click="getHistory(tool.tool_history_id)"
+                  >
+                    <i class="fas fa-eye"></i>
+                  </button>
+                </td>
+                <td :class="getStatusClass(tool.tool_history_id)">
+                  <strong>{{ getStatus(tool.tool_history_id) }}</strong>
+                </td>
+              </tr>
+            </tbody>
+            <tbody v-else>
+              <tr>
+                <td colspan="10">Tidak ada data</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      <div v-if="activeTable === 'toolUsed'">
+        <div class="card-header">
+          <h5>Tool Used {{ location }}</h5>
+        </div>
+        <div class="card-body">
+          <table class="table table-hover text-center table-bordered">
+            <thead>
+              <tr>
+                <th scope="col">No</th>
+                <th scope="col">Tanggal</th>
+                <th scope="col">PIC</th>
+                <th scope="col">Tool</th>
+                <th scope="col">Tool No</th>
+                <th scope="col">QR Code</th>
+                <th scope="col">Mesin</th>
+                <th scope="col">Std Counter</th>
+                <th scope="col">Act Counter</th>
+                <th scope="col">Keterangan</th>
+              </tr>
+            </thead>
+            <tbody v-if="toolUsedWithToolNo.length > 0">
+              <tr v-for="(tool, index) in toolUsedWithToolNo" :key="index">
+                <td>
+                  {{ meta.itemsPerPage * (meta.currentPage - 1) + index + 1 }}
+                </td>
+                <td>{{ tool.created_dt }}</td>
+                <td>{{ tool.pic_check }}</td>
+                <td>{{ tool.tool_nm }}</td>
+                <td>{{ tool.tool_no }}</td>
+                <td>{{ tool.tool_qr }}</td>
+                <td>{{ tool.machine_nm }}</td>
+                <td>{{ tool.std_ctr }}</td>
+                <td>{{ tool.act_counter }}</td>
+                <td>{{ tool.system_problem }}</td>
+              </tr>
+            </tbody>
+            <tbody v-else>
+              <tr>
+                <td colspan="10">Tidak ada data</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- Pagination Controls -->
       <div class="card-footer">
         <div class="d-flex justify-content-between">
@@ -654,7 +835,11 @@ import {
   ACTION_FOCUS_INPUT,
   GET_FOCUS_INPUT,
 } from '@/store/TMS/focusInput.module'
-import { ACTION_TOOL_DETAILS } from '@/store/TMS/TOOLS.module'
+import {
+  ACTION_ADD_TOOL_HISTORY,
+  ACTION_TOOL_DETAILS,
+  GET_TOOL_DETAILS,
+} from '@/store/TMS/TOOLS.module'
 import {
   ACTION_ADD_H_TOOL_F_CHECK,
   ACTION_ADD_HISTORY_TOOL_NO_QR,
@@ -662,6 +847,7 @@ import {
   ACTION_GET_MACHINES_FOR_TOOL_CHANGE,
   ACTION_GET_STD_TOOL_F_CHECK,
   ACTION_GET_TOOL_NO,
+  ACTION_GET_TOOL_USED_BY_LOCATION,
   ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK,
   ACTION_GET_TOOLS_NO_FOR_TOOL_CHANGE,
   ACTION_UPDATE_MACHINE_FOR_TOOL_CHANGE,
@@ -669,6 +855,7 @@ import {
   GET_MACHINES_FOR_TOOL_CHANGE,
   GET_STD_TOOL_F_CHECK,
   GET_TOOL_NO,
+  GET_TOOL_USED_BY_LOCATION,
   GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK,
   GET_TOOLS_NO_FOR_TOOL_CHANGE,
 } from '@/store/TMS/FirstCheck.module'
@@ -681,6 +868,12 @@ import {
   GET_USERS_OPTS,
   GET_USERS_TREESELECT,
 } from '@/store/TMS/USERS.module'
+import {
+  ACTION_GET_TOOL_BY_TOOL_TYPE_ID,
+  ACTION_GET_TOOL_USED_BY_MACHINE_ID,
+  GET_TOOL_BY_TOOL_TYPE_ID,
+  GET_TOOL_USED_BY_MACHINE_ID,
+} from '@/store/TMS/MergeToolChangeUsed.module'
 
 export default {
   components: {
@@ -692,6 +885,7 @@ export default {
   name: 'ToolRegrindingSection',
   data() {
     return {
+      activeTable: 'firstCheck',
       unitCheck: 1, // Default jumlah unit check
       workNumbers: Array(this.unitCheck).fill(''),
       stdFCheckData: [], // Data STD First Check
@@ -722,17 +916,21 @@ export default {
       modalTitle: '',
       user_ln: null,
       picTc: null,
-      act_ctr: 0,
+      act_ctr: '',
       std_ctr: '',
       problemDescription: '',
       editTool: null,
       selectedMachine: null,
       originalMachineId: null,
       filteredTools: null,
+      toolUsedId: null,
+      tool_used: null,
+      qr_tool_used: null,
     }
   },
   computed: {
     ...mapGetters([
+      GET_TOOL_USED_BY_MACHINE_ID,
       GET_META,
       GET_FOCUS_INPUT,
       GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK,
@@ -742,6 +940,9 @@ export default {
       GET_TOOLS_NO_FOR_TOOL_CHANGE,
       GET_USERS_TREESELECT,
       GET_TOOL_NO,
+      GET_TOOL_USED_BY_LOCATION,
+      GET_TOOL_BY_TOOL_TYPE_ID,
+      GET_TOOL_DETAILS,
     ]),
     toolsWithStatus() {
       let tools = this.GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK
@@ -765,11 +966,6 @@ export default {
           })
 
           const isMatched = matchedTool?.tool_no === inputToolNo
-          if (!isMatched) {
-            console.warn(
-              `[NOT MATCHED] inputToolNo: ${inputToolNo} !== ${matchedTool?.tool_no}`,
-            )
-          }
 
           return isMatched
         })
@@ -804,7 +1000,59 @@ export default {
         }
       })
     },
+    toolUsedWithToolNo() {
+      let tools = this.GET_TOOL_USED_BY_LOCATION
+      const inputToolNo = this.toolsForTc?.tool_no?.trim()
 
+      if (inputToolNo) {
+        tools = tools.filter((tool) => {
+          const toolNameNormalized = this.normalizeToolName(tool.tool_nm)
+
+          const machineOpRaw = tool.machine_nm?.match(/\(([^)]+)\)/)?.[1] || ''
+          const machineOpNo = machineOpRaw.replace(/[A-Za-z]+$/, '')
+
+          const matchedTool = this.GET_TOOL_NO.find((t) => {
+            const tNameNormalized = this.normalizeToolName(t.tool_nm)
+            const toolNameMatch =
+              tNameNormalized.includes(toolNameNormalized) ||
+              toolNameNormalized.includes(tNameNormalized)
+            const opMatch = t.op_no == machineOpNo
+
+            return toolNameMatch && opMatch
+          })
+
+          const isMatched = matchedTool?.tool_no === inputToolNo
+          if (!isMatched) {
+            console.warn(
+              `[NOT MATCHED] inputToolNo: ${inputToolNo} !== ${matchedTool?.tool_no}`,
+            )
+          }
+
+          return isMatched
+        })
+      }
+
+      return tools.map((tool) => {
+        const toolNameNormalized = this.normalizeToolName(tool.tool_nm)
+        const machineOpRaw = tool.machine_nm?.match(/\(([^)]+)\)/)?.[1] || ''
+        const machineOpNo = machineOpRaw.replace(/[A-Za-z]+$/, '')
+
+        const matchedTool = this.GET_TOOL_NO.find((t) => {
+          const tNameNormalized = this.normalizeToolName(t.tool_nm)
+          const toolNameMatch =
+            tNameNormalized.includes(toolNameNormalized) ||
+            toolNameNormalized.includes(tNameNormalized)
+          const opMatch = t.op_no == machineOpNo
+
+          return toolNameMatch && opMatch
+        })
+
+        return {
+          ...tool,
+          tool_no: matchedTool ? matchedTool.tool_no : null,
+        }
+      })
+    },
     isFormValid() {
       // // Pastikan jumlah unit check sudah diisi
       if (this.unitCheck <= 0) return false
@@ -887,7 +1135,11 @@ export default {
       this.$store.dispatch(ACTION_GET_TOOL_NO, {
         location: this.location,
       })
-      console.log('data get tool_no', this.GET_TOOL_NO)
+      this.$store.dispatch(ACTION_GET_TOOL_USED_BY_LOCATION, {
+        location: this.location,
+        meta: this.meta,
+      })
+
       this.getMachines()
       this.getFCheck()
       this.updateUserLn()
@@ -922,6 +1174,84 @@ export default {
     },
   },
   methods: {
+    async setelahPilihMesin() {
+      try {
+        await this.$nextTick() // Tunggu reactivity selesai
+        let distribution_id = null
+        // IN MACHINE STATUS
+        if (this.location == 'Crank Shaft') {
+          distribution_id = 10
+        } else if (this.location == 'Cam Shaft') {
+          distribution_id = 7
+        } else if (this.location == 'Cylinder Head') {
+          distribution_id = 8
+        } else if (this.location == 'Cylinder Block') {
+          distribution_id = 9
+        }
+        if (!this.machinesForTc.machine_id) return
+        const payload = {
+          machine_id: this.machinesForTc.machine_id,
+          distribution_id: distribution_id,
+        }
+
+        await this.$store.dispatch(ACTION_GET_TOOL_USED_BY_MACHINE_ID, payload)
+      } catch (error) {
+        console.log(error)
+      }
+    },
+    async handleToolChange() {
+      try {
+        const selectedTool = this.toolsForTc
+
+        this.std_ctr = selectedTool.std_ctr
+
+        if (this.GET_TOOL_USED_BY_MACHINE_ID.length == 0) {
+          this.toolUsedId = null
+          this.tool_used = 'Tool Tidak Ditemukan'
+          this.qr_tool_used = null
+          return
+        }
+
+        let normalizedSelectedToolNm = selectedTool.tool_nm
+          .replace(/[\s-]/g, '')
+          .toLowerCase()
+
+        let filteredTools = this.GET_TOOL_USED_BY_MACHINE_ID.filter((tool) => {
+          let normalizedToolNo = tool.tool_no
+            .replace(/[\s-]/g, '')
+            .toLowerCase()
+          return normalizedToolNo.includes(normalizedSelectedToolNm)
+        })
+
+        // Ambil satu data dengan created_dt terbaru
+        let latestTool = filteredTools.reduce((latest, tool) => {
+          return !latest ||
+            new Date(tool.created_dt) > new Date(latest.created_dt)
+            ? tool
+            : latest
+        }, null)
+
+        const payload = {
+          tool_type_id: latestTool.tool_type_id,
+          tool_id: latestTool.tool_id,
+        }
+        let response = await this.$store.dispatch(
+          ACTION_GET_TOOL_BY_TOOL_TYPE_ID,
+          payload,
+        )
+        if (
+          response.status === 200 &&
+          this.GET_TOOL_BY_TOOL_TYPE_ID.length > 0
+        ) {
+          const tool = this.GET_TOOL_BY_TOOL_TYPE_ID[0] // Ambil data pertama
+          this.tool_used = tool.tool_no
+          this.qr_tool_used = tool.tool_qr
+          this.toolUsedId = tool.tool_id
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    },
     async searchTool() {
       const tool_no = this.toolsForTc?.tool_no
       console.log('tool_no', tool_no)
@@ -984,26 +1314,12 @@ export default {
         this.$swal('Error', 'Gagal Edit Mesin', 'error')
       }
     },
-    async handleToolChange() {
-      try {
-        const selectedTool = this.toolsForTc
-        // console.log('payload', selectedTool)
-        this.std_ctr = selectedTool.std_ctr
-      } catch (error) {
-        console.log(error)
-      }
-    },
+
     formatToolLabelTool(option) {
       if (!option) return 'Tidak ada data' // Fallback jika option null atau undefined
       return `${option.tool_no || 'N/A'} / ${option.tool_nm || 'N/A'}`
     },
-    openModal(type) {
-      if (type === 'new') {
-        this.modalTitle = 'Tool Baru' // Untuk modal tool baru
-      } else {
-        this.modalTitle = 'Tool Bekas' // Untuk modal tool bekas
-      }
-    },
+    openModal(type) {},
     updateUserLn() {
       const locationMap = {
         'Crank Shaft': 'CRS',
@@ -1033,17 +1349,14 @@ export default {
       }
     },
     async handleMachineChange() {
-      console.log('kepanggil')
-
       try {
         const opNo = this.machinesForTc.op_no
-        console.log('Nilai op_no:', opNo)
+
         const op_no = opNo.replace(/\D/g, '') // Hapus semua karakter non-angka
         const payload = {
           op_no: op_no,
           location: this.location,
         }
-        console.log('Angka dari op_no:', op_no) // Output misalnya: "50"
 
         let response = await this.$store.dispatch(
           ACTION_GET_TOOLS_NO_FOR_TOOL_CHANGE,
@@ -1070,42 +1383,90 @@ export default {
           distribution_id = 9
         }
         const payload = {
-          distribution_id,
+          distribution_id: distribution_id,
+          machine_id: this.machinesForTc?.machine_id || null,
+          tool_id: this.toolsForTc?.tool_id || null,
+          system_activity: 'IN USED',
+          pic: this.picTc.id || null,
+        }
+        await this.$store.dispatch(ACTION_ADD_HISTORY_TOOL_NO_QR, payload)
+        this.submitToolUsed()
+      } catch (error) {
+        console.error('Error submitting tool change:', error)
+        this.$swal.fire('Error', 'Gagal menambah data', 'error')
+      }
+    },
+    async submitToolUsed() {
+      try {
+        let distribution_id = null
+
+        // Tentukan distribution_id berdasarkan lokasi
+        if (this.location === 'Crank Shaft') {
+          distribution_id = 6
+        } else if (this.location === 'Cam Shaft') {
+          distribution_id = 3
+        } else if (this.location === 'Cylinder Head') {
+          distribution_id = 4
+        } else if (this.location === 'Cylinder Block') {
+          distribution_id = 5
         }
 
-        if (this.modalTitle === 'Tool Bekas') {
-          payload.machine_id = this.machinesForTc?.machine_id || null
-          payload.tool_id = this.toolsForTc?.tool_id || null
-          payload.act_ctr = this.act_ctr
-          payload.system_activity = 'USED'
-
-          // Tambahkan masalah jika act < std
-          if (this.act_ctr < this.std_ctr) {
-            payload.problem = this.problemDescription
+        // === CASE 1: Tanpa QR tool ===
+        if (!this.qr_tool_used) {
+          const payload = {
+            distribution_id: distribution_id,
+            machine_id: this.machinesForTc?.machine_id || null,
+            tool_id: this.toolsForTc?.tool_id || null,
+            act_ctr: this.act_ctr,
+            system_activity: 'USED',
+            system_problem: this.problemDescription,
+            pic: this.picTc?.id || null,
           }
-        } else if (this.modalTitle === 'Tool Baru') {
-          payload.machine_id = this.machinesForTc?.machine_id || null
-          payload.tool_id = this.toolsForTc?.tool_id || null
-          payload.system_activity = 'IN USED'
 
-          // Tambahkan logika spesifik untuk Tool Baru jika diperlukan
+          let response = await this.$store.dispatch(
+            ACTION_ADD_HISTORY_TOOL_NO_QR,
+            payload,
+          )
+          if (response.status === 201) {
+            await this.$store.dispatch(
+              ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK,
+              {
+                meta: this.meta,
+                location: this.location,
+              },
+            )
+            this.$swal.fire('Success', 'Data kamu sudah bertambah', 'success')
+          }
+        } else {
+          const payloadData = {
+            headerData: {
+              tool_id: this.toolUsedId,
+              distribution_id: distribution_id,
+              system_activity: 'USED',
+              system_problem: this.problemDescription,
+              act_counter: this.act_ctr,
+              machine_id: this.machinesForTc?.machine_id || null,
+              pic_check: this.picTc?.id || null,
+            },
+          }
+
+          let response = await this.$store.dispatch(
+            ACTION_ADD_TOOL_HISTORY,
+            payloadData,
+          )
+
+          if (response.status === 200) {
+            await this.$store.dispatch(
+              ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK,
+              {
+                meta: this.meta,
+                location: this.location,
+              },
+            )
+            this.$swal.fire('Success', 'Data kamu sudah bertambah', 'success')
+          }
+          this.resetModal()
         }
-
-        payload.pic = this.picTc.id || null // PIC dari modal
-
-        // console.log('Payload toolchange:', payload)
-        let response = await this.$store.dispatch(
-          ACTION_ADD_HISTORY_TOOL_NO_QR,
-          payload,
-        )
-        if (response.status === 201) {
-          this.$store.dispatch(ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK, {
-            meta: this.meta,
-            location: this.location,
-          })
-          this.$swal.fire('Success', 'Data kamu sudah bertambah', 'success')
-        }
-        this.resetModal()
       } catch (error) {
         console.error('Error submitting tool change:', error)
         this.$swal.fire('Error', 'Gagal menambah data', 'error')
@@ -1480,5 +1841,9 @@ export default {
 .auto-width-select {
   display: block;
   width: 200px; /* Samakan dengan lebar label */
+}
+.btn.active {
+  background-color: #c82333 !important;
+  border-color: #bd2130 !important;
 }
 </style>
