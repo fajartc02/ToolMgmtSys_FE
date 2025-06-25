@@ -1211,6 +1211,10 @@ export default {
           this.qr_tool_used = null
           return
         }
+        console.log(
+          'this.GET_TOOL_USED_BY_MACHINE_ID',
+          this.GET_TOOL_USED_BY_MACHINE_ID,
+        )
 
         let normalizedSelectedToolNm = selectedTool.tool_nm
           .replace(/[\s-]/g, '')
@@ -1222,6 +1226,13 @@ export default {
             .toLowerCase()
           return normalizedToolNo.includes(normalizedSelectedToolNm)
         })
+
+        if (filteredTools.length == 0) {
+          this.toolUsedId = null
+          this.tool_used = 'Tool Tidak Ditemukan'
+          this.qr_tool_used = null
+          return
+        }
 
         // Ambil satu data dengan created_dt terbaru
         let latestTool = filteredTools.reduce((latest, tool) => {
