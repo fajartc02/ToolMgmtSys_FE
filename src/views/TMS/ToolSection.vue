@@ -1004,20 +1004,29 @@ export default {
       let tools = this.GET_TOOL_USED_BY_LOCATION
       const inputToolNo = this.toolsForTc?.tool_no?.trim()
 
+      const normalizeCoreToolName = (name) => {
+        return (
+          name
+            ?.toLowerCase()
+            .replace(/[^a-z0-9]/g, '') // hapus spasi, strip, dll
+            .replace(/(\d{4,})$/, '') || // hapus angka 4 digit ke atas di akhir
+          ''
+        )
+      }
+
       if (inputToolNo) {
         tools = tools.filter((tool) => {
-          const toolNameNormalized = this.normalizeToolName(tool.tool_nm)
+          const toolNameNormalized = normalizeCoreToolName(tool.tool_nm)
 
           const machineOpRaw = tool.machine_nm?.match(/\(([^)]+)\)/)?.[1] || ''
           const machineOpNo = machineOpRaw.replace(/[A-Za-z]+$/, '')
 
           const matchedTool = this.GET_TOOL_NO.find((t) => {
-            const tNameNormalized = this.normalizeToolName(t.tool_nm)
+            const tNameNormalized = normalizeCoreToolName(t.tool_nm)
             const toolNameMatch =
               tNameNormalized.includes(toolNameNormalized) ||
               toolNameNormalized.includes(tNameNormalized)
             const opMatch = t.op_no == machineOpNo
-
             return toolNameMatch && opMatch
           })
 
@@ -1033,12 +1042,12 @@ export default {
       }
 
       return tools.map((tool) => {
-        const toolNameNormalized = this.normalizeToolName(tool.tool_nm)
+        const toolNameNormalized = normalizeCoreToolName(tool.tool_nm)
         const machineOpRaw = tool.machine_nm?.match(/\(([^)]+)\)/)?.[1] || ''
         const machineOpNo = machineOpRaw.replace(/[A-Za-z]+$/, '')
 
         const matchedTool = this.GET_TOOL_NO.find((t) => {
-          const tNameNormalized = this.normalizeToolName(t.tool_nm)
+          const tNameNormalized = normalizeCoreToolName(t.tool_nm)
           const toolNameMatch =
             tNameNormalized.includes(toolNameNormalized) ||
             toolNameNormalized.includes(tNameNormalized)
@@ -1050,9 +1059,11 @@ export default {
         return {
           ...tool,
           tool_no: matchedTool ? matchedTool.tool_no : null,
+          std_ctr: matchedTool?.std_ctr || null, // misal kamu butuh ini
         }
       })
     },
+
     isFormValid() {
       // // Pastikan jumlah unit check sudah diisi
       if (this.unitCheck <= 0) return false
@@ -1100,10 +1111,19 @@ export default {
     //   console.log('GET_FOCUS_INPUT', this.GET_FOCUS_INPUT)
     //   this.focusToggle(this.GET_FOCUS_INPUT)
     // },
+    activeTable() {
+      if (this.machinesForTc?.machine_id) {
+        this.searchTool()
+      }
+    },
     'toolsForTc.tool_no'(newVal, oldVal) {
       if (!newVal && oldVal) {
         // Saat tool_no dihapus setelah sebelumnya ada, balikin data awal
         this.$store.dispatch(ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK, {
+          location: this.location,
+          meta: this.meta,
+        })
+        this.$store.dispatch(ACTION_GET_TOOL_USED_BY_LOCATION, {
           location: this.location,
           meta: this.meta,
         })
@@ -1135,6 +1155,7 @@ export default {
       this.$store.dispatch(ACTION_GET_TOOL_NO, {
         location: this.location,
       })
+
       this.$store.dispatch(ACTION_GET_TOOL_USED_BY_LOCATION, {
         location: this.location,
         meta: this.meta,
@@ -1264,18 +1285,24 @@ export default {
       }
     },
     async searchTool() {
-      const tool_no = this.toolsForTc?.tool_no
-      console.log('tool_no', tool_no)
+      try {
+        const payload = {
+          location: this.location,
+          machine_id: this.machinesForTc.machine_id,
+          meta: this.meta,
+        }
+        if (!payload.machine_id) {
+          return
+        }
+        const actionName =
+          this.activeTable === 'firstCheck'
+            ? ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK
+            : ACTION_GET_TOOL_USED_BY_LOCATION
 
-      const payload = {
-        location: this.location,
-        machine_id: this.machinesForTc.machine_id,
-        meta: this.meta,
+        await this.$store.dispatch(actionName, payload)
+      } catch (error) {
+        console.log('Error in searchTool:', error)
       }
-      await this.$store.dispatch(
-        ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK,
-        payload,
-      )
     },
     normalizeToolName(name) {
       if (!name) return ''
