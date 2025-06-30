@@ -229,6 +229,10 @@ export default {
     async onMachineChange() {
       try {
         await this.$nextTick() // Tunggu reactivity selesai
+        await this.$store.dispatch(ACTION_TOOL_DETAILS, {
+          tool_qr: this.GET_TOOL_DETAILS.tool_qr,
+          machine_id: this.form.machine_id,
+        })
         let distribution_id = null
         // IN MACHINE STATUS
         if (this.location == 'Crank Shaft') {
@@ -245,7 +249,7 @@ export default {
           machine_id: this.form.machine_id,
           distribution_id: distribution_id,
         }
-        console.log('payload', payload)
+        // console.log('payload', payload)
 
         let response = await this.$store.dispatch(
           ACTION_GET_TOOL_USED_BY_MACHINE_ID,
@@ -273,7 +277,7 @@ export default {
               : latest
           }, null)
 
-          console.log('Latest Tool:', latestTool)
+          // console.log('Latest Tool:', latestTool)
           const payload = {
             tool_type_id: this.tool_type_id,
             tool_id: latestTool.tool_id,
@@ -305,7 +309,7 @@ export default {
         'Cylinder Head': 'CH',
       }
       this.user_ln = locationMap[this.location] || null
-      console.log('User LN updated to:', this.user_ln)
+      // console.log('User LN updated to:', this.user_ln)
 
       // // Dispatch action to fetch user options
       // if (this.user_ln) {
@@ -347,7 +351,7 @@ export default {
             regrinding_count: this.GET_TOOL_DETAILS.regrinding_count,
           },
         }
-        console.log('payloadData', payloadData)
+        // console.log('payloadData', payloadData)
 
         await this.$store.dispatch(ACTION_ADD_TOOL_HISTORY, payloadData)
         await this.$store.dispatch(ACTION_TOOL_DETAILS, {
@@ -457,7 +461,7 @@ export default {
     // if (this.user_ln) {
     //   this.$store.dispatch(ACTION_USERS_OPTS, this.user_ln)
     // }
-    console.log('Tool Type ID:', this.tool_type_id)
+    // console.log('Tool Type ID:', this.tool_type_id)
   },
 }
 </script>

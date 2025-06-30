@@ -68,7 +68,7 @@ const mutations = {
     state.TOOL_QR = payload[0].tool_qr
   },
   SET_TOOL_DETAILS(state, payload) {
-    state.TOOL_DETAILS = payload[0]
+    state.TOOL_DETAILS = payload
   },
   SET_TOOL_HISTORIES(state, payload) {
     state.TOOL_HISTORIES = payload
@@ -99,6 +99,7 @@ const actions = {
         params: query,
       })
       commit(SET_TOOL_DETAILS, response.data.data ? response.data.data : null)
+
       return response
     } catch (error) {
       console.error(error)

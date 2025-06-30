@@ -52,6 +52,7 @@
             <HistoricalGraphVue
               :tool_qr="search.tool_qr"
               :system_activity="'USED'"
+              :key="search.tool_qr"
             />
           </div>
         </div>

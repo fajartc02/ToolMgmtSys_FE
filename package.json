@@ -3,8 +3,9 @@
   "version": "1.1.4",
   "description": "",
   "author": "FID Andhika",
+   
   "scripts": {
-    "serve": "vue-cli-service serve  --port 8090",
+    "serve": "vue-cli-service serve",
     "serve:dev": "vue-cli-service serve --mode dev --port 8090",
     "build": "vue-cli-service build",
     "build:dev": "vue-cli-service build --mode dev",

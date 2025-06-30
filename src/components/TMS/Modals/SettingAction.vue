@@ -224,7 +224,7 @@ export default {
       }
     },
     tool_type_id: function () {
-      console.log(this.tool_type_id)
+      // console.log(this.tool_type_id)
       if (this.tool_type_id)
         this.$store.dispatch(ACTION_TOOL_STD, {
           tool_type_id: this.tool_type_id,
