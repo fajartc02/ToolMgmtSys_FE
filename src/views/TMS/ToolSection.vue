@@ -577,7 +577,7 @@
       class="card mt-2"
     >
       <!--card tool chnage tanpa QR CODE-->
-      <div class="mt-2 mb-2">
+      <div v-if="search.tool_qr == ''" class="mt-2 mb-2">
         <div class="card-header">
           <h5>Tool Change Tool Without QR</h5>
         </div>
