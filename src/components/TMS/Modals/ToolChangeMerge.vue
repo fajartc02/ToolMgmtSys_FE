@@ -106,7 +106,7 @@
         "
         >Close</CButton
       >
-      <CButton color="primary" @click="submitCheck">Save</CButton>
+      <CButton color="primary" :disabled="!isFormModalComplete" @click="submitCheck">Save</CButton>
     </CModalFooter>
   </CModal>
 </template>
@@ -215,6 +215,13 @@ export default {
       GET_TOOL_USED_BY_MACHINE_ID,
       GET_TOOL_BY_TOOL_TYPE_ID,
     ]),
+    isFormModalComplete() {
+      return (
+        this.form.machine_id != null &&
+        this.form.pic_check != null &&
+        this.form.act_counter
+      )
+    },
     isCounterAchieved() {
       return this.form.act_counter >= this.std_counter
     },
