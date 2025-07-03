@@ -782,7 +782,7 @@
                 <td>{{ tool.tool_qr }}</td>
                 <td>{{ tool.machine_nm }}</td>
                 <td>{{ tool.std_ctr }}</td>
-                <td>{{ tool.act_counter }}</td>
+                <td>{{ tool.act_counter ?? tool.act_ctr }}</td>
                 <td>{{ tool.system_problem }}</td>
               </tr>
             </tbody>
