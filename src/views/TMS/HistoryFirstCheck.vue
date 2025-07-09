@@ -24,7 +24,7 @@
             class="card mb-3"
           >
             <div class="card-header">
-              <h3 class="card-title">{{ chart.measuring_portion }}</h3>
+              <h3 class="card-title">{{ chart.title }}</h3>
             </div>
             <div class="card-body">
               <div
@@ -484,197 +484,157 @@ export default {
       }
     },
     prepareChartData(data) {
-      // console.log('Preparing chart data:', data)
-      if (data && data.data) {
+      console.log('Preparing chart data:', data)
+      if (data && Array.isArray(data.data)) {
         this.chartDataList = [] // Reset data chart
 
-        // Iterasi pada measuring portion (level pertama)
-        Object.keys(data.data).forEach((portionName) => {
-          const measuringData = data.data[portionName]
-          if (!measuringData || !measuringData.values) {
-            console.warn(`Missing values for portion: ${portionName}`)
-            return // Skip jika data tidak valid
-          }
+        data.data.forEach((measuringData) => {
+          const {
+            measuring_portion: portionName,
+            lower_limit,
+            upper_limit,
+            values,
+            gauge,
+          } = measuringData
 
-          const { lower_limit, upper_limit, values } = measuringData
-          // console.log(`Processing portion: ${portionName}`)
-          // console.log(
-          //   `Lower Limit: ${lower_limit}, Upper Limit: ${upper_limit}`,
-          // )
-          // console.log('Values:', values)
+          console.log(`Processing portion: ${portionName}`)
+          console.log(
+            `Lower Limit: ${lower_limit}, Upper Limit: ${upper_limit}`,
+          )
+          console.log('Values:', values)
 
-          // Parsing nilai
           const isStatusData = values.some(
             (valueObj) => valueObj.value === 'OK' || valueObj.value === 'NG',
           )
 
           if (isStatusData) {
-            // Data status (OK/NG)
-            // console.log(`Status data for portion: ${portionName}`)
-
-            // Kelompokkan berdasarkan no_work dan tanggal
+            // Penanganan data OK/NG
             const groupedByWorkAndDate = values.reduce((acc, valueObj) => {
               const { no_work, value, created_dt } = valueObj
-              const date = moment(created_dt).format('DD-MM-YYYY') // Format tanggal
-
-              // Gunakan kombinasi no_work dan tanggal sebagai key
+              const date = moment(created_dt).format('DD-MM-YYYY')
               const key = `${no_work}-${date}`
 
               if (!acc[key])
                 acc[key] = { statuses: [], dates: [], workId: no_work }
-              acc[key].statuses.push(value) // Status OK/NG
-              acc[key].dates.push(date) // Tanggal
+              acc[key].statuses.push(value)
+              acc[key].dates.push(date)
+
               return acc
             }, {})
 
-            // Simpan hasil pengelompokan ke chartDataList
             this.chartDataList.push({
+              title: `${gauge || 'Unknown'} - ${portionName}`,
               measuring_portion: portionName,
-              groupedStatuses: Object.values(groupedByWorkAndDate), // Ubah menjadi array
+              groupedStatuses: Object.values(groupedByWorkAndDate),
             })
           } else {
-            // Data numerik untuk grafik
+            // Penanganan data numerik
             const seriesData = values.map((valueObj) => {
-              const value = parseFloat(valueObj.value)
-              return isNaN(value) ? 0 : value
+              const val = parseFloat(valueObj.value)
+              return isNaN(val) ? 0 : val
             })
 
-            // console.log('Parsed series data:', seriesData)
-
-            // Menentukan rentang skala Y yang dinamis
             let minValue = Math.min(...seriesData)
             let maxValue = Math.max(...seriesData)
 
-            // Mendeklarasikan lower_limit dan upper_limit terlebih dahulu
-            const lowerLimit =
+            const parsedLower =
               lower_limit !== null ? parseFloat(lower_limit) : null
-            const upperLimit =
+            const parsedUpper =
               upper_limit !== null ? parseFloat(upper_limit) : null
 
-            // Menambahkan 15% ruang di atas dan di bawah
-            const margin = (maxValue - minValue) * 0.15 // 15% margin
-            minValue =
-              lowerLimit !== null
-                ? Math.min(minValue, lowerLimit - margin)
-                : minValue
-            maxValue =
-              upperLimit !== null
-                ? Math.max(maxValue, upperLimit + margin)
-                : maxValue
-
-            // Menghitung rentang antara lower_limit dan upper_limit agar tetap proporsional
-            const tickSpacing = (upperLimit - lowerLimit) / 6
-
-            // Menentukan nilai-nilai di luar rentang upper_limit dan lower_limit
-            const minOutsideValue = Math.min(
-              ...seriesData.filter((val) => val < lowerLimit),
-            )
-            const maxOutsideValue = Math.max(
-              ...seriesData.filter((val) => val > upperLimit),
-            )
-
-            // Jika ada nilai di luar lower_limit, sesuaikan minValue
-            if (minOutsideValue < lowerLimit) {
-              minValue = minOutsideValue // Menambahkan nilai yang lebih kecil dari lower_limit
+            const margin = (maxValue - minValue) * 0.15
+            if (parsedLower !== null) {
+              minValue = Math.min(minValue, parsedLower - margin)
+            }
+            if (parsedUpper !== null) {
+              maxValue = Math.max(maxValue, parsedUpper + margin)
             }
 
-            // Jika ada nilai di luar upper_limit, sesuaikan maxValue
-            if (maxOutsideValue > upperLimit) {
-              maxValue = maxOutsideValue // Menambahkan nilai yang lebih besar dari upper_limit
-            }
+            const minOutside = Math.min(
+              ...seriesData.filter((val) => val < parsedLower),
+            )
+            const maxOutside = Math.max(
+              ...seriesData.filter((val) => val > parsedUpper),
+            )
+            if (minOutside < parsedLower) minValue = minOutside
+            if (maxOutside > parsedUpper) maxValue = maxOutside
 
-            // Menyiapkan kategori sumbu X
             const categories = values.map(
-              (valueObj) =>
-                `${moment(valueObj.created_dt).format('DD-MM-YYYY')} - ${
-                  valueObj.no_work
-                }`,
+              (v) =>
+                `${moment(v.created_dt).format('DD-MM-YYYY')} - ${v.no_work}`,
             )
+
             const series = [
               {
-                name: portionName,
+                name: `${gauge || 'Unknown'} - ${portionName}`,
                 data: seriesData,
               },
             ]
 
-            // Menyiapkan konfigurasi chart
             const chartOptions = {
               chart: {
                 id: `chart-${portionName}`,
-                toolbar: {
-                  show: false,
-                },
+                toolbar: { show: false },
               },
               xaxis: { categories },
-              yaxis: {
-                min: minValue,
-                max: maxValue,
-              },
-              stroke: {
-                curve: 'straight', // Membuat garis lebih halus
-                width: 4, // Ketebalan garis
-              },
+              yaxis: { min: minValue, max: maxValue },
+              stroke: { curve: 'straight', width: 4 },
               markers: {
-                size: 6, // Ukuran marker
-                colors: ['#FF4560'], // Warna marker
-                strokeColors: '#fff', // Warna garis tepi marker
-                strokeWidth: 2, // Ketebalan garis tepi marker
-                hover: {
-                  size: 8, // Ukuran marker saat di-hover
-                },
+                size: 6,
+                colors: ['#FF4560'],
+                strokeColors: '#fff',
+                strokeWidth: 2,
+                hover: { size: 8 },
               },
               grid: {
-                xaxis: {
-                  lines: {
-                    show: true, // Menampilkan garis pada sumbu x
-                  },
-                },
-                yaxis: {
-                  lines: {
-                    show: true, // Menampilkan garis pada sumbu y
-                  },
-                },
+                xaxis: { lines: { show: true } },
+                yaxis: { lines: { show: true } },
               },
-              dataLabels: {
-                enabled: true,
-              },
+              dataLabels: { enabled: true },
               annotations: {
                 yaxis: [
-                  ...(upperLimit !== null
+                  ...(parsedUpper !== null
                     ? [
                         {
-                          y: upperLimit,
-                          borderColor: '#FF4560', // Warna garis
-                          strokeWidth: 3, // Ketebalan garis
-                          strokeDashArray: 6, // Garis putus-putus
+                          y: parsedUpper,
+                          borderColor: '#FF4560',
+                          strokeWidth: 3,
+                          strokeDashArray: 6,
                           label: {
-                            borderColor: '#FF4560', // Warna garis pada label
-                            style: { color: '#fff', background: '#FF4560' }, // Warna teks dan latar belakang label
-                            text: `Upper Limit: ${upperLimit}`, // Teks label
+                            borderColor: '#FF4560',
+                            style: { color: '#fff', background: '#FF4560' },
+                            text: `Upper Limit: ${parsedUpper}`,
                           },
                         },
                       ]
                     : []),
-                  ...(lowerLimit !== null
+                  ...(parsedLower !== null
                     ? [
                         {
-                          y: lowerLimit,
-                          borderColor: '#FEB019', // Warna garis
-                          strokeWidth: 3, // Ketebalan garis
-                          strokeDashArray: 8, // Garis putus-putus
+                          y: parsedLower,
+                          borderColor: '#FEB019',
+                          strokeWidth: 3,
+                          strokeDashArray: 8,
                           label: {
-                            borderColor: '#FEB019', // Warna garis pada label
-                            style: { color: '#fff', background: '#FEB019' }, // Warna teks dan latar belakang label
-                            text: `Lower Limit: ${lowerLimit}`, // Teks label
+                            borderColor: '#FEB019',
+                            style: { color: '#fff', background: '#FEB019' },
+                            text: `Lower Limit: ${parsedLower}`,
                           },
                         },
                       ]
                     : []),
                 ],
               },
+              title: {
+                text: `${gauge || 'Unknown'} - ${portionName}`,
+                align: 'center',
+                style: {
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  color: '#333',
+                },
+              },
             }
-
-            // console.log('Chart options:', chartOptions)
 
             this.chartDataList.push({
               measuring_portion: portionName,
@@ -684,11 +644,203 @@ export default {
           }
         })
 
-        // console.log('Final chartDataList:', this.chartDataList)
+        console.log('Final chartDataList:', this.chartDataList)
       } else {
-        console.error('Invalid data format: Missing data object.')
+        console.error('Invalid data format: Missing or malformed data.')
       }
     },
+
+    // prepareChartData(data) {
+    //   console.log('Preparing chart data:', data)
+    //   if (data && data.data) {
+    //     this.chartDataList = [] // Reset data chart
+
+    //     Object.keys(data.data).forEach((portionName) => {
+    //       const measuringData = data.data[portionName]
+    //       if (!measuringData || !measuringData.values) {
+    //         console.warn(`Missing values for portion: ${portionName}`)
+    //         return
+    //       }
+
+    //       const { lower_limit, upper_limit, values } = measuringData
+    //       console.log(`Processing portion: ${portionName}`)
+    //       console.log(
+    //         `Lower Limit: ${lower_limit}, Upper Limit: ${upper_limit}`,
+    //       )
+    //       console.log('Values:', values)
+
+    //       // Deteksi apakah sebagian besar value numerik
+    //       const numericCount = values.filter(
+    //         (v) => v.value?.trim() !== '' && !isNaN(parseFloat(v.value)),
+    //       ).length
+    //       const isMostlyNumeric = numericCount >= values.length / 2
+
+    //       if (!isMostlyNumeric) {
+    //         // === Data status (OK/NG) ===
+    //         console.log(`Status data for portion: ${portionName}`)
+
+    //         const groupedByWorkAndDate = values.reduce((acc, valueObj) => {
+    //           const { no_work, value, created_dt } = valueObj
+    //           const date = moment(created_dt).format('DD-MM-YYYY')
+    //           const key = `${no_work}-${date}`
+
+    //           if (!acc[key])
+    //             acc[key] = { statuses: [], dates: [], workId: no_work }
+    //           acc[key].statuses.push(value)
+    //           acc[key].dates.push(date)
+    //           return acc
+    //         }, {})
+
+    //         this.chartDataList.push({
+    //           measuring_portion: portionName,
+    //           groupedStatuses: Object.values(groupedByWorkAndDate),
+    //         })
+    //       } else {
+    //         // === Data numerik ===
+    //         const seriesData = values.map((valueObj) => {
+    //           const value = parseFloat(valueObj.value)
+    //           return isNaN(value) ? 0 : value
+    //         })
+
+    //         console.log('Parsed series data:', seriesData)
+
+    //         let minValue = Math.min(...seriesData)
+    //         let maxValue = Math.max(...seriesData)
+
+    //         const lowerLimit =
+    //           lower_limit !== null ? parseFloat(lower_limit) : null
+    //         const upperLimit =
+    //           upper_limit !== null ? parseFloat(upper_limit) : null
+
+    //         const margin = (maxValue - minValue) * 0.15
+    //         minValue =
+    //           lowerLimit !== null
+    //             ? Math.min(minValue, lowerLimit - margin)
+    //             : minValue
+    //         maxValue =
+    //           upperLimit !== null
+    //             ? Math.max(maxValue, upperLimit + margin)
+    //             : maxValue
+
+    //         const minOutsideValue = Math.min(
+    //           ...seriesData.filter(
+    //             (val) => lowerLimit !== null && val < lowerLimit,
+    //           ),
+    //         )
+    //         const maxOutsideValue = Math.max(
+    //           ...seriesData.filter(
+    //             (val) => upperLimit !== null && val > upperLimit,
+    //           ),
+    //         )
+
+    //         if (lowerLimit !== null && minOutsideValue < lowerLimit) {
+    //           minValue = minOutsideValue
+    //         }
+    //         if (upperLimit !== null && maxOutsideValue > upperLimit) {
+    //           maxValue = maxOutsideValue
+    //         }
+
+    //         const categories = values.map(
+    //           (valueObj) =>
+    //             `${moment(valueObj.created_dt).format('DD-MM-YYYY')} - ${
+    //               valueObj.no_work
+    //             }`,
+    //         )
+    //         const series = [
+    //           {
+    //             name: portionName,
+    //             data: seriesData,
+    //           },
+    //         ]
+
+    //         const chartOptions = {
+    //           chart: {
+    //             id: `chart-${portionName}`,
+    //             toolbar: {
+    //               show: false,
+    //             },
+    //           },
+    //           xaxis: { categories },
+    //           yaxis: {
+    //             min: minValue,
+    //             max: maxValue,
+    //           },
+    //           stroke: {
+    //             curve: 'straight',
+    //             width: 4,
+    //           },
+    //           markers: {
+    //             size: 6,
+    //             colors: ['#FF4560'],
+    //             strokeColors: '#fff',
+    //             strokeWidth: 2,
+    //             hover: {
+    //               size: 8,
+    //             },
+    //           },
+    //           grid: {
+    //             xaxis: {
+    //               lines: { show: true },
+    //             },
+    //             yaxis: {
+    //               lines: { show: true },
+    //             },
+    //           },
+    //           dataLabels: {
+    //             enabled: true,
+    //           },
+    //           annotations: {
+    //             yaxis: [
+    //               ...(upperLimit !== null
+    //                 ? [
+    //                     {
+    //                       y: upperLimit,
+    //                       borderColor: '#FF4560',
+    //                       strokeWidth: 3,
+    //                       strokeDashArray: 6,
+    //                       label: {
+    //                         borderColor: '#FF4560',
+    //                         style: { color: '#fff', background: '#FF4560' },
+    //                         text: `Upper Limit: ${upperLimit}`,
+    //                       },
+    //                     },
+    //                   ]
+    //                 : []),
+    //               ...(lowerLimit !== null
+    //                 ? [
+    //                     {
+    //                       y: lowerLimit,
+    //                       borderColor: '#FEB019',
+    //                       strokeWidth: 3,
+    //                       strokeDashArray: 8,
+    //                       label: {
+    //                         borderColor: '#FEB019',
+    //                         style: { color: '#fff', background: '#FEB019' },
+    //                         text: `Lower Limit: ${lowerLimit}`,
+    //                       },
+    //                     },
+    //                   ]
+    //                 : []),
+    //             ],
+    //           },
+    //         }
+
+    //         console.log('Chart options:', chartOptions)
+
+    //         this.chartDataList.push({
+    //           measuring_portion: portionName,
+    //           chartOptions,
+    //           series,
+    //         })
+    //       }
+    //     })
+
+    //     console.log('Final chartDataList:', this.chartDataList)
+    //   } else {
+    //     console.error('Invalid data format: Missing data object.')
+    //   }
+    // },
+
     resetChartData() {
       // console.log('Resetting chart data')
       this.chartDataList = []
