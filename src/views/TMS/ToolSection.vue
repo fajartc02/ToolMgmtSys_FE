@@ -605,9 +605,9 @@
               <v-select
                 id="machineFilter"
                 :options="GET_MACHINES_FOR_TOOL_CHANGE"
-                v-model="machinesForTc"
+                v-model="selectedSearchMachine"
                 label="machine_nm"
-                @update:modelValue="handleMachineChange"
+                @update:modelValue="handleSearchMachine"
                 placeholder="Pilih mesin..."
                 :append-to-body="true"
                 class="w-100"
@@ -617,7 +617,7 @@
               <v-select
                 id="toolNoFilter"
                 :options="GET_TOOLS_NO_FOR_TOOL_CHANGE"
-                v-model="toolsForTc"
+                v-model="selectedSearchTool"
                 :getOptionLabel="formatToolLabelTool"
                 @update:modelValue="searchTool"
                 placeholder="Pilih Tool No..."
@@ -926,6 +926,8 @@ export default {
       toolUsedId: null,
       tool_used: null,
       qr_tool_used: null,
+      selectedSearchMachine: null,
+      selectedSearchTool: null,
     }
   },
   computed: {
@@ -946,7 +948,7 @@ export default {
     ]),
     toolsWithStatus() {
       let tools = this.GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK
-      const inputToolNo = this.toolsForTc?.tool_no?.trim()
+      const inputToolNo = this.selectedSearchTool?.tool_no?.trim()
 
       if (inputToolNo) {
         tools = tools.filter((tool) => {
@@ -1002,7 +1004,7 @@ export default {
     },
     toolUsedWithToolNo() {
       let tools = this.GET_TOOL_USED_BY_LOCATION
-      const inputToolNo = this.toolsForTc?.tool_no?.trim()
+      const inputToolNo = this.selectedSearchTool?.tool_no?.trim()
 
       const normalizeCoreToolName = (name) => {
         return (
@@ -1112,11 +1114,11 @@ export default {
     //   this.focusToggle(this.GET_FOCUS_INPUT)
     // },
     activeTable() {
-      if (this.machinesForTc?.machine_id) {
+      if (this.selectedSearchMachine?.machine_id) {
         this.searchTool()
       }
     },
-    'toolsForTc.tool_no'(newVal, oldVal) {
+    'selectedSearchTool.tool_no'(newVal, oldVal) {
       if (!newVal && oldVal) {
         // Saat tool_no dihapus setelah sebelumnya ada, balikin data awal
         this.$store.dispatch(ACTION_GET_TOOLS_BY_LOCATION_FOR_FIRST_CHECK, {
@@ -1288,7 +1290,7 @@ export default {
       try {
         const payload = {
           location: this.location,
-          machine_id: this.machinesForTc.machine_id,
+          machine_id: this.selectedSearchMachine.machine_id,
           meta: this.meta,
         }
         if (!payload.machine_id) {
@@ -1407,6 +1409,27 @@ export default {
         console.error(error)
       }
     },
+    async handleSearchMachine() {
+      try {
+        const opNo = this.selectedSearchMachine.op_no
+
+        const op_no = opNo.replace(/\D/g, '') // Hapus semua karakter non-angka
+        const payload = {
+          op_no: op_no,
+          location: this.location,
+        }
+
+        let response = await this.$store.dispatch(
+          ACTION_GET_TOOLS_NO_FOR_TOOL_CHANGE,
+          payload,
+        )
+        if (response.status === 200) {
+          // console.log('response', this.GET_TOOLS_NO_FOR_TOOL_CHANGE)
+        }
+      } catch (error) {
+        console.error(error)
+      }
+    },
     async submitToolChange() {
       try {
         let distribution_id = null
@@ -1434,6 +1457,7 @@ export default {
         this.$swal.fire('Error', 'Gagal menambah data', 'error')
       }
     },
+
     async submitToolUsed() {
       try {
         let distribution_id = null
