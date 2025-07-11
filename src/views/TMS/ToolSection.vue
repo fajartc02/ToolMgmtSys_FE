@@ -768,6 +768,7 @@
                 <th scope="col">Std Counter</th>
                 <th scope="col">Act Counter</th>
                 <th scope="col">Keterangan</th>
+                <!-- <th>jam</th> -->
               </tr>
             </thead>
             <tbody v-if="toolUsedWithToolNo.length > 0">
@@ -784,6 +785,15 @@
                 <td>{{ tool.std_ctr }}</td>
                 <td>{{ tool.act_counter ?? tool.act_ctr }}</td>
                 <td>{{ tool.system_problem }}</td>
+                <!-- <td>
+                  <div v-if="tool.selected_time">
+                    {{ tool.selected_time }}
+                  </div>
+                  <TimePickerCell
+                    v-else
+                    @update="(val) => setSelectedTime(index, val)"
+                  />
+                </td> -->
               </tr>
             </tbody>
             <tbody v-else>
@@ -881,6 +891,7 @@ export default {
     CardToolStatus,
     PaginationMaster,
     vSelect,
+    TimePickerCell: () => import('@/views/TMS/testingjam.vue'),
   },
   name: 'ToolRegrindingSection',
   data() {
@@ -1006,25 +1017,15 @@ export default {
       let tools = this.GET_TOOL_USED_BY_LOCATION
       const inputToolNo = this.selectedSearchTool?.tool_no?.trim()
 
-      const normalizeCoreToolName = (name) => {
-        return (
-          name
-            ?.toLowerCase()
-            .replace(/[^a-z0-9]/g, '') // hapus spasi, strip, dll
-            .replace(/(\d{4,})$/, '') || // hapus angka 4 digit ke atas di akhir
-          ''
-        )
-      }
-
       if (inputToolNo) {
         tools = tools.filter((tool) => {
-          const toolNameNormalized = normalizeCoreToolName(tool.tool_nm)
+          const toolNameNormalized = this.normalizeToolName(tool.tool_nm)
 
           const machineOpRaw = tool.machine_nm?.match(/\(([^)]+)\)/)?.[1] || ''
           const machineOpNo = machineOpRaw.replace(/[A-Za-z]+$/, '')
 
           const matchedTool = this.GET_TOOL_NO.find((t) => {
-            const tNameNormalized = normalizeCoreToolName(t.tool_nm)
+            const tNameNormalized = this.normalizeToolName(t.tool_nm)
             const toolNameMatch =
               tNameNormalized.includes(toolNameNormalized) ||
               toolNameNormalized.includes(tNameNormalized)
@@ -1044,12 +1045,12 @@ export default {
       }
 
       return tools.map((tool) => {
-        const toolNameNormalized = normalizeCoreToolName(tool.tool_nm)
+        const toolNameNormalized = this.normalizeToolName(tool.tool_nm)
         const machineOpRaw = tool.machine_nm?.match(/\(([^)]+)\)/)?.[1] || ''
         const machineOpNo = machineOpRaw.replace(/[A-Za-z]+$/, '')
 
         const matchedTool = this.GET_TOOL_NO.find((t) => {
-          const tNameNormalized = normalizeCoreToolName(t.tool_nm)
+          const tNameNormalized = this.normalizeToolName(t.tool_nm)
           const toolNameMatch =
             tNameNormalized.includes(toolNameNormalized) ||
             toolNameNormalized.includes(tNameNormalized)

@@ -126,6 +126,11 @@ const routes = [
         name: 'UserProfile',
         component: () => import('@/views/TMS/Profile.vue'),
       },
+      // {
+      //   path: '/timePicker',
+      //   name: 'TimePicker',
+      //   component: () => import('@/views/TMS/testingjam.vue'),
+      // },
 
       /*define other in here*/
     ],

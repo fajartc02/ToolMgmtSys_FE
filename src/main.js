@@ -19,6 +19,18 @@ import Highcharts from 'highcharts'
 import HighchartsVue from 'highcharts-vue'
 import VCalendar from 'v-calendar'
 import 'v-calendar/style.css'
+
+// ✅ Tambahkan ini untuk Vuetify
+import 'vuetify/styles'
+import { createVuetify } from 'vuetify'
+import * as components from 'vuetify/components'
+import * as directives from 'vuetify/directives'
+
+const vuetify = createVuetify({
+  components,
+  directives,
+})
+
 if (process.env.VUE_APP_STANDALONE_SINGLE_SPA === 'true') {
   require('@/components/StandAloneStyle.vue')
 } else {
@@ -53,6 +65,9 @@ const vueLifecycles = singleSpaVue({
       highcharts: Highcharts,
     })
     app.use(VCalendar, {})
+
+    // ✅ Aktifkan Vuetify di app
+    app.use(vuetify)
   },
 })
 

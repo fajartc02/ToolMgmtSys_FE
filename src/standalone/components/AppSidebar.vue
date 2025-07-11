@@ -225,6 +225,13 @@ export default {
             },
           ],
         },
+        // {
+        //   component: 'CNavItem',
+        //   to: '/timePicker',
+        //   name: 'Time Picker',
+        //   icon: 'icon-time',
+        //   parentId: 'ROOT',
+        // },
 
         // {
         //   component: 'CNavItem',
